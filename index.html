@@ -49,30 +49,51 @@
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         .pokemon-card:hover {
             transform: translateY(-8px) scale(1.02);
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* Efeitos Visuais de Raridade nos Cards */
+        .card-rarity-comum {
+            border: 2px solid rgba(148, 163, 184, 0.4);
+        }
+        .card-rarity-comum:hover {
+            border-color: rgba(255, 222, 0, 0.8);
+        }
+
+        .card-rarity-raro {
+            border: 2px solid rgba(34, 211, 238, 0.8);
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.4), 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .card-rarity-raro:hover {
             border-color: #FFDE00;
+            box-shadow: 0 0 25px rgba(34, 211, 238, 0.7), 0 20px 40px rgba(0,0,0,0.5);
         }
 
-        /* Brilhos para raridades na Pokédex */
-        .rarity-glow-raro {
-            box-shadow: 0 0 15px rgba(226, 232, 240, 0.4);
-            border: 2px solid rgba(226, 232, 240, 0.8);
+        .card-rarity-lendario {
+            border: 2px solid rgba(245, 158, 11, 0.9);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6), 0 10px 30px rgba(0,0,0,0.3);
+            animation: pulse-border-gold 2s infinite ease-in-out;
         }
-        .rarity-glow-lendario {
-            box-shadow: 0 0 20px rgba(255, 222, 0, 0.6);
-            border: 2px solid rgba(255, 222, 0, 0.9);
-            animation: pulse-border 2s infinite ease-in-out;
+        .card-rarity-lendario:hover {
+            animation: none;
+            border-color: #FFDE00;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.95), 0 20px 40px rgba(0,0,0,0.6);
         }
 
-        @keyframes pulse-border {
-            0%, 100% { border-color: rgba(255, 222, 0, 0.9); box-shadow: 0 0 15px rgba(255, 222, 0, 0.6); }
-            50% { border-color: rgba(255, 28, 28, 0.9); box-shadow: 0 0 25px rgba(255, 28, 28, 0.8); }
+        @keyframes pulse-border-gold {
+            0%, 100% { 
+                border-color: rgba(245, 158, 11, 0.9); 
+                box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), 0 10px 30px rgba(0,0,0,0.3); 
+            }
+            50% { 
+                border-color: rgba(239, 68, 68, 0.9); 
+                box-shadow: 0 0 22px rgba(239, 68, 68, 0.8), 0 10px 30px rgba(0,0,0,0.3); 
+            }
         }
 
         /* Cores de cards baseadas no tipo de pokemon */
@@ -135,6 +156,12 @@
     </style>
 </head>
 <body class="flex flex-col text-white antialiased no-scrollbar pb-16">
+
+    <!-- BOTÃO DE LIKE GLOBAL FLUTUANTE -->
+    <div id="btn-like-global" class="fixed top-4 right-4 z-50 bg-gray-900/95 border-2 border-pokeYellow px-3.5 py-1.5 rounded-full flex items-center gap-2 cursor-pointer shadow-xl hover:scale-105 active:scale-95 transition-all select-none">
+        <span id="like-heart" class="text-pokeRed text-lg animate-[pulse_1.5s_infinite] inline-block">❤️</span>
+        <span id="like-count" class="font-mono font-bold text-pokeYellow text-xs md:text-sm">...</span>
+    </div>
 
     <!-- HEADER / LOGO -->
     <header class="w-full text-center py-4 px-2 select-none z-10">
@@ -403,14 +430,21 @@
                 </div>
             </div>
 
-            <!-- Painel de Controles de Batalha -->
+            <!-- Painel de Controles de Batalha (Atualizado com Ataque Rápido e Forte) -->
             <div id="battle-controls" class="w-full max-w-md bg-gray-900/90 p-5 rounded-2xl border-2 border-pokeRed flex flex-col gap-3 text-center">
                 <div class="grid grid-cols-2 gap-3">
-                    <button id="btn-battle-attack" class="touch-target bg-pokeRed hover:bg-red-500 active:scale-95 text-white font-extrabold py-3.5 px-4 rounded-xl border-b-4 border-pokeRedDark hover:border-red-600 uppercase text-sm tracking-wider flex items-center justify-center gap-1.5">
-                        💥 Atacar!
+                    <button id="btn-battle-attack-fast" class="touch-target bg-pokeBlue hover:bg-blue-500 active:scale-95 text-white font-extrabold py-3.5 px-2 rounded-xl border-b-4 border-pokeBlueDark hover:border-blue-600 uppercase text-xs tracking-wider flex flex-col items-center justify-center gap-1">
+                        <span>💥 Atq. Rápido</span>
+                        <span class="text-[9px] opacity-80 font-semibold font-sans normal-case">100% Acerto | Base</span>
                     </button>
-                    <button id="btn-battle-run" class="touch-target bg-gray-700 hover:bg-gray-600 active:scale-95 text-white font-bold py-3.5 px-4 rounded-xl border-b-4 border-gray-800 hover:border-gray-700 uppercase text-sm tracking-wider flex items-center justify-center">
-                        🏳️ Fugir
+                    <button id="btn-battle-attack-strong" class="touch-target bg-pokeRed hover:bg-red-500 active:scale-95 text-white font-extrabold py-3.5 px-2 rounded-xl border-b-4 border-pokeRedDark hover:border-red-600 uppercase text-xs tracking-wider flex flex-col items-center justify-center gap-1">
+                        <span>⚡ Atq. Forte</span>
+                        <span class="text-[9px] opacity-80 font-semibold font-sans normal-case">70% Acerto | 1.5x</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 mt-1">
+                    <button id="btn-battle-run" class="touch-target bg-gray-700 hover:bg-gray-600 active:scale-95 text-white font-bold py-2 px-4 rounded-xl border-b-4 border-gray-800 hover:border-gray-700 uppercase text-xs tracking-wider flex items-center justify-center">
+                        🏳️ Fugir da Batalha
                     </button>
                 </div>
             </div>
@@ -422,9 +456,9 @@
                     <h3 id="battle-result-title" class="text-xl md:text-2xl font-black text-pokeYellow"></h3>
                     <p id="battle-result-desc" class="text-sm md:text-base text-gray-300 leading-relaxed"></p>
                     
-                    <!-- Mudança de Nível Secreta -->
+                    <!-- Mudança de Nível / Recuperação de HP -->
                     <div id="level-up-details" class="hidden w-full bg-gray-800 p-3.5 rounded-xl border border-gray-700 flex flex-col gap-1">
-                        <span class="text-xs font-bold text-green-400 uppercase tracking-widest">Nível UP! 📈</span>
+                        <span class="text-xs font-bold text-green-400 uppercase tracking-widest">Recompensa da Luta 📈</span>
                         <p id="level-up-text" class="text-sm font-semibold"></p>
                     </div>
 
@@ -453,7 +487,7 @@
             </div>
         </section>
 
-        <!-- ==================== TELA 7: POKÉDEX (NOVA SEÇÃO) ==================== -->
+        <!-- ==================== TELA 7: POKÉDEX ==================== -->
         <section id="screen-pokedex" class="w-full hidden flex flex-col items-center gap-6 animate-fade-in">
             <!-- Cabeçalho da Pokédex -->
             <div class="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-900/90 p-5 rounded-2xl border-2 border-purple-500/40">
@@ -537,7 +571,7 @@
 
     </main>
 
-    <!-- NOTIFICAÇÃO CUSTOMIZADA (Substitui alert) -->
+    <!-- NOTIFICAÇÃO CUSTOMIZADA -->
     <div id="custom-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-900/95 border-2 border-pokeYellow px-6 py-3.5 rounded-xl shadow-2xl z-50 text-center font-bold text-sm md:text-base hidden max-w-sm w-11/12 animate-fade-in flex items-center gap-3">
         <span id="toast-icon">💡</span>
         <span id="toast-message" class="text-white">Aviso geral!</span>
@@ -623,6 +657,70 @@
             }
         };
 
+        // --- SISTEMA DE LIKES PERSISTENTE COM FALLBACK ---
+        const LikeSystem = {
+            storageKey: 'pokemon_rpg_likes_local',
+            currentLikes: 78, // Default seed em caso de falha de conexão inicial
+
+            async init() {
+                const cached = localStorage.getItem(this.storageKey);
+                if (cached) {
+                    this.currentLikes = parseInt(cached, 10);
+                }
+                this.updateUI();
+
+                try {
+                    // Endpoint público do counterapi.dev - Sem necessidade de token/key complexos
+                    const res = await fetch('https://api.counterapi.dev/v1/vmrstecnologia/pokemonrpg');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && typeof data.count === 'number') {
+                            this.currentLikes = data.count;
+                            localStorage.setItem(this.storageKey, this.currentLikes);
+                            this.updateUI();
+                        }
+                    }
+                } catch (e) {
+                    console.warn("API de contador offline. Rodando localmente.", e);
+                }
+            },
+
+            async like() {
+                this.currentLikes++;
+                localStorage.setItem(this.storageKey, this.currentLikes);
+                this.updateUI();
+
+                // Efeito visual no coração
+                const heart = document.getElementById('like-heart');
+                if (heart) {
+                    heart.classList.add('scale-125', 'text-red-500');
+                    setTimeout(() => heart.classList.remove('scale-125', 'text-red-500'), 250);
+                }
+
+                try {
+                    // Dispara incremento na nuvem
+                    const res = await fetch('https://api.counterapi.dev/v1/vmrstecnologia/pokemonrpg/up');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && typeof data.count === 'number') {
+                            this.currentLikes = data.count;
+                            localStorage.setItem(this.storageKey, this.currentLikes);
+                            this.updateUI();
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Erro ao sincronizar like no servidor.");
+                }
+
+                showToast("Obrigado pelo seu Like!", "💖", "border-pokeRed");
+            },
+
+            updateUI() {
+                const el = document.getElementById('like-count');
+                if (el) el.innerText = this.currentLikes;
+            }
+        };
+
         // --- ESTADO DO JOGO ---
         const GameState = {
             playerName: '',
@@ -643,10 +741,9 @@
                 turn: 'player', 
                 active: false
             },
-            // Pokédex Caching & Pagination
             pokedexCache: [],
-            pokedexLoadedLimit: 24, // Limite de amostragem inicial
-            pokedexIncrement: 24 // Quantidade para carregar no botão
+            pokedexLoadedLimit: 24,
+            pokedexIncrement: 24
         };
 
         const TRAINER_NAMES = [
@@ -657,7 +754,8 @@
         // --- INICIALIZAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
             initEventListeners();
-            preloadPokedexInBg(); // Dispara carregamento em background imediatamente
+            preloadPokedexInBg(); 
+            LikeSystem.init();
         });
 
         function showScreen(screenId) {
@@ -692,6 +790,11 @@
 
         // --- EVENT LISTENERS ---
         function initEventListeners() {
+            // Like Global
+            document.getElementById('btn-like-global').addEventListener('click', () => {
+                LikeSystem.like();
+            });
+
             document.getElementById('btn-start-journey').addEventListener('click', () => {
                 AudioEngine.playClick();
                 const nameInput = document.getElementById('player-name-input').value.trim();
@@ -750,8 +853,13 @@
                 showScreen('screen-menu');
             });
 
-            document.getElementById('btn-battle-attack').addEventListener('click', () => {
-                executePlayerTurn();
+            // Ataques de Batalha (Rápido / Forte)
+            document.getElementById('btn-battle-attack-fast').addEventListener('click', () => {
+                executePlayerTurn('fast');
+            });
+
+            document.getElementById('btn-battle-attack-strong').addEventListener('click', () => {
+                executePlayerTurn('strong');
             });
 
             document.getElementById('btn-battle-run').addEventListener('click', () => {
@@ -783,12 +891,14 @@
             });
         }
 
-        // --- CÁLCULO E FORMATAÇÃO DE ATRIBUTOS ---
+        // --- CÁLCULO E FORMATAÇÃO DE ATRIBUTOS COM SISTEMA DE XP ---
         function parsePokemonData(apiData, lvl) {
             const base_hp = apiData.stats.find(s => s.stat.name === 'hp').base_stat;
             const base_atk = apiData.stats.find(s => s.stat.name === 'attack').base_stat;
             const base_def = apiData.stats.find(s => s.stat.name === 'defense').base_stat;
+            const totalStats = base_hp + base_atk + base_def;
 
+            // Atributo = Base + (lvl * 2) conforme diretriz
             const hp_max = Math.round(base_hp + (lvl * 2));
             const attack = Math.round(base_atk + (lvl * 2));
             const defense = Math.round(base_def + (lvl * 2));
@@ -800,17 +910,51 @@
                 image = apiData.sprites.front_default;
             }
 
+            // Lógica de Raridade Baseada no Total de Status ou ID de Lendários
+            let rarity = 'comum';
+            const legendaryIds = [144, 145, 146, 147, 148, 149, 150, 151];
+            if (legendaryIds.includes(apiData.id) || totalStats > 250) {
+                rarity = 'lendario';
+            } else if ((apiData.id >= 101 && apiData.id <= 140) || (totalStats >= 190 && totalStats <= 250)) {
+                rarity = 'raro';
+            }
+
             return {
                 id: apiData.id,
                 name: apiData.name.charAt(0).toUpperCase() + apiData.name.slice(1),
                 types: types,
                 image: image,
                 lvl: lvl,
+                xp: 0,
+                xp_needed: lvl * 25, // Progresso rápido e dinâmico
                 hp_max: hp_max,
                 hp_atual: hp_max,
                 attack: attack,
-                defense: defense
+                defense: defense,
+                rarity: rarity
             };
+        }
+
+        // --- ADVANCED TYPE MATCHUP CALCULATOR ---
+        function getTypeMatchupModifier(atkTypes, defTypes) {
+            if (!atkTypes || !defTypes || atkTypes.length === 0 || defTypes.length === 0) return 1.0;
+            const atk = atkTypes[0]; // Considera o primeiro tipo principal do ataque
+            let modifier = 1.0;
+
+            const advantages = {
+                fire: { grass: 2.0, water: 0.5 },
+                water: { fire: 2.0, grass: 0.5 },
+                grass: { water: 2.0, fire: 0.5 }
+            };
+
+            if (advantages[atk]) {
+                defTypes.forEach(def => {
+                    if (advantages[atk][def] !== undefined) {
+                        modifier *= advantages[atk][def];
+                    }
+                });
+            }
+            return modifier;
         }
 
         // --- SISTEMA DA TELA 2 (STARTER CHOICES) ---
@@ -830,8 +974,9 @@
             document.getElementById('starter-loader').classList.remove('hidden');
 
             try {
+                // PokéAPI sempre em minúsculas
                 const fetchPromises = GameState.startersAvailable.map(poke => 
-                    fetch(`https://pokeapi.co/api/v2/pokemon/${poke.name}`).then(res => res.json())
+                    fetch(`https://pokeapi.co/api/v2/pokemon/${poke.name.toLowerCase()}`).then(res => res.json())
                 );
                 const pokemonsRaw = await Promise.all(fetchPromises);
                 document.getElementById('starter-loader').classList.add('hidden');
@@ -883,7 +1028,13 @@
             const container = document.getElementById('starter-container');
             const card = document.createElement('div');
             const mainType = pokemon.types[0];
-            card.className = `pokemon-card card-${mainType} rounded-2xl p-4 flex flex-col items-center text-center cursor-pointer relative select-none ${isSecret ? 'border-4 border-yellow-300 animate-pulse' : ''}`;
+            
+            // Estilos de raridade dinâmica
+            let rarityBorderClass = 'card-rarity-comum';
+            if (pokemon.rarity === 'lendario') rarityBorderClass = 'card-rarity-lendario';
+            else if (pokemon.rarity === 'raro') rarityBorderClass = 'card-rarity-raro';
+
+            card.className = `pokemon-card card-${mainType} ${rarityBorderClass} rounded-2xl p-4 flex flex-col items-center text-center cursor-pointer relative select-none ${isSecret ? 'animate-pulse' : ''}`;
             
             if (isSecret) {
                 const badge = document.createElement('span');
@@ -901,8 +1052,9 @@
                     <img src="${pokemon.image}" alt="${pokemon.name}" class="w-24 h-24 object-contain animate-bounce-slow drop-shadow-md" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png'">
                 </div>
                 <h3 class="text-lg font-black tracking-wide mt-2 drop-shadow-sm">${pokemon.name}</h3>
-                <div class="flex gap-1.5 mt-1.5">
-                    ${pokemon.types.map(t => `<span class="bg-white/20 text-xs px-2.5 py-0.5 rounded-full capitalize font-semibold">${translateType(t)}</span>`).join('')}
+                <div class="flex gap-1.5 mt-1.5 justify-center flex-wrap">
+                    ${pokemon.types.map(t => `<span class="bg-white/20 text-[10px] px-2 py-0.5 rounded-full capitalize font-semibold">${translateType(t)}</span>`).join('')}
+                    <span class="bg-black/40 text-[9px] px-1.5 py-0.5 rounded uppercase font-bold text-pokeYellow">${pokemon.rarity}</span>
                 </div>
                 
                 <div class="w-full bg-black/20 rounded-xl p-2.5 mt-3 text-xs flex justify-around gap-1 font-semibold">
@@ -1058,18 +1210,15 @@
             }, 2000); 
         }
 
-        // --- TELA 5: BATALHA RPG POR TURNOS ---
+        // --- SISTEMA DE COMBATE REESTRUTURADO ---
         async function startBattleScenario() {
             showScreen('screen-battle');
             document.getElementById('battle-log').innerHTML = '';
             document.getElementById('battle-controls').classList.remove('hidden');
             document.getElementById('level-up-details').classList.add('hidden');
 
-            // --- CORREÇÃO DO BUG ---
-            // Sempre garantir que o botão de ataque seja reabilitado e limpo ao iniciar uma nova luta.
-            const attackBtn = document.getElementById('btn-battle-attack');
-            attackBtn.disabled = false;
-            attackBtn.classList.remove('opacity-50');
+            // Garante que ambos os botões de ataque estejam habilitados
+            disableBattleActionButtons(false);
 
             const randomTrainer = TRAINER_NAMES[Math.floor(Math.random() * TRAINER_NAMES.length)];
             document.getElementById('opponent-trainer-name').innerText = randomTrainer;
@@ -1103,7 +1252,7 @@
                 renderBattleCards();
 
                 addBattleLog(`⚔️ ${randomTrainer} enviou ${GameState.battle.opponent.name} (LVL ${GameState.battle.opponent.lvl})!`);
-                addBattleLog(`⭐ Vai, ${playerPoke.name}! Mostre sua força!`);
+                addBattleLog(`⭐ Vai, ${playerPoke.name}! Escolha o seu ataque!`);
             } catch (e) {
                 console.error(e);
                 showToast("Falha ao carregar batalha.", "❌", "border-pokeRed");
@@ -1125,39 +1274,105 @@
             opponentCardCont.appendChild(createPokemonCardElement(oppPoke, true));
         }
 
-        function executePlayerTurn() {
+        function disableBattleActionButtons(disabled) {
+            const fastBtn = document.getElementById('btn-battle-attack-fast');
+            const strongBtn = document.getElementById('btn-battle-attack-strong');
+            fastBtn.disabled = disabled;
+            strongBtn.disabled = disabled;
+            if (disabled) {
+                fastBtn.classList.add('opacity-50');
+                strongBtn.classList.add('opacity-50');
+            } else {
+                fastBtn.classList.remove('opacity-50');
+                strongBtn.classList.remove('opacity-50');
+            }
+        }
+
+        // NOVO SISTEMA DE CÁLCULO DE DANO (FÓRMULA RPG AVANÇADA)
+        function calculateDamage(attacker, defender) {
+            const lvl = attacker.lvl;
+            const atk = attacker.attack;
+            const def = defender.defense;
+
+            // Fórmula base adaptada do Pokémon oficial
+            let baseDamage = (((2 * lvl / 5) + 2) * atk * 15 / def) / 50;
+
+            // Modificador de Vantagem Elemental
+            const typeMod = getTypeMatchupModifier(attacker.types, defender.types);
+            baseDamage *= typeMod;
+
+            // Variação de Dano de 85% a 100%
+            const variance = 0.85 + (Math.random() * 0.15);
+            let finalDamage = Math.round(baseDamage * variance);
+
+            // Dano mínimo garantido de pelo menos 10% do ataque do próprio atacante
+            const minDamage = Math.round(atk * 0.1);
+            if (finalDamage < minDamage) {
+                finalDamage = minDamage;
+            }
+
+            return {
+                amount: Math.max(1, finalDamage),
+                modifier: typeMod
+            };
+        }
+
+        // Execução do Turno do Jogador
+        function executePlayerTurn(attackType) {
             if (!GameState.battle.active || GameState.battle.turn !== 'player') return;
 
             const playerPoke = GameState.team[GameState.activePokemonIndex];
             const oppPoke = GameState.battle.opponent;
 
             AudioEngine.playClick();
-            
+            disableBattleActionButtons(true);
+
+            // Ataque Forte tem 30% de chance de errar
+            if (attackType === 'strong' && Math.random() < 0.3) {
+                addBattleLog(`❌ ${playerPoke.name} errou o Ataque Forte! O oponente desviou!`);
+                AudioEngine.playDamage();
+                
+                GameState.battle.turn = 'opponent';
+                setTimeout(executeOpponentTurn, 1500);
+                return;
+            }
+
             const oppCardEl = document.getElementById('battle-opponent-card').firstChild;
             if (oppCardEl) {
                 oppCardEl.classList.add('shake-animation');
                 setTimeout(() => oppCardEl.classList.remove('shake-animation'), 500);
             }
 
-            let damage = playerPoke.attack - oppPoke.defense;
-            if (damage < 1) damage = 1;
+            // Calcula o dano base com a nova fórmula
+            const damageResult = calculateDamage(playerPoke, oppPoke);
+            let damage = damageResult.amount;
+
+            // Multiplica por 1.5x se for o Ataque Forte
+            if (attackType === 'strong') {
+                damage = Math.round(damage * 1.5);
+            }
 
             oppPoke.hp_atual = Math.max(0, oppPoke.hp_atual - damage);
             AudioEngine.playDamage();
 
-            addBattleLog(`💥 ${playerPoke.name} atacou e causou ${damage} de dano!`);
+            let effectMsg = "";
+            if (damageResult.modifier > 1) effectMsg = "💥 É super efetivo! ";
+            else if (damageResult.modifier < 1) effectMsg = "🍃 Não é muito efetivo... ";
+
+            const attackLabel = attackType === 'strong' ? 'Ataque Forte' : 'Ataque Rápido';
+            addBattleLog(`${effectMsg}${playerPoke.name} desferiu ${attackLabel} e causou ${damage} de dano!`);
+            
             renderBattleCards();
 
             if (oppPoke.hp_atual <= 0) {
                 handleBattleVictory();
             } else {
                 GameState.battle.turn = 'opponent';
-                document.getElementById('btn-battle-attack').disabled = true;
-                document.getElementById('btn-battle-attack').classList.add('opacity-50');
                 setTimeout(executeOpponentTurn, 1500);
             }
         }
 
+        // Execução do Turno do Oponente (Controle Automático Inteligente)
         function executeOpponentTurn() {
             if (!GameState.battle.active || GameState.battle.turn !== 'opponent') return;
 
@@ -1170,41 +1385,78 @@
                 setTimeout(() => playerCardEl.classList.remove('shake-animation'), 500);
             }
 
-            let damage = oppPoke.attack - playerPoke.defense;
-            if (damage < 1) damage = 1;
+            // Inimigo escolhe ataque forte aleatoriamente (30% de chance)
+            const opponentAimsStrong = Math.random() < 0.3;
+
+            if (opponentAimsStrong && Math.random() < 0.3) {
+                addBattleLog(`❌ Oponente ${oppPoke.name} tentou um ataque forte, mas falhou!`);
+                AudioEngine.playDamage();
+                
+                GameState.battle.turn = 'player';
+                disableBattleActionButtons(false);
+                return;
+            }
+
+            const damageResult = calculateDamage(oppPoke, playerPoke);
+            let damage = damageResult.amount;
+            if (opponentAimsStrong) {
+                damage = Math.round(damage * 1.5);
+            }
 
             playerPoke.hp_atual = Math.max(0, playerPoke.hp_atual - damage);
             AudioEngine.playDamage();
 
-            addBattleLog(`⚠️ ${oppPoke.name} inimigo contra-atacou causando ${damage} de dano!`);
+            let effectMsg = "";
+            if (damageResult.modifier > 1) effectMsg = "💥 É super efetivo! ";
+            else if (damageResult.modifier < 1) effectMsg = "🍃 Não é muito efetivo... ";
+
+            addBattleLog(`⚠️ ${effectMsg}Oponente ${oppPoke.name} contra-atacou causando ${damage} de dano!`);
             renderBattleCards();
 
             if (playerPoke.hp_atual <= 0) {
                 handleBattleDefeat();
             } else {
                 GameState.battle.turn = 'player';
-                document.getElementById('btn-battle-attack').disabled = false;
-                document.getElementById('btn-battle-attack').classList.remove('opacity-50');
+                disableBattleActionButtons(false);
             }
         }
 
+        // Vitória do Treinador: Sistema de XP e Recuperação de 30% HP
         function handleBattleVictory() {
             GameState.battle.active = false;
             AudioEngine.playLvlUp();
 
             const playerPoke = GameState.team[GameState.activePokemonIndex];
+            const oppPoke = GameState.battle.opponent;
+
+            // Ganho de XP dinâmico
+            const xpGained = Math.round(oppPoke.lvl * 8);
+            playerPoke.xp += xpGained;
+
             const oldLvl = playerPoke.lvl;
-            playerPoke.lvl += 1;
+            let leveledUp = false;
 
-            // Atributo = Base + (lvl * 2) conforme diretriz
-            const base_hp = playerPoke.hp_max - (oldLvl * 2);
-            const base_atk = playerPoke.attack - (oldLvl * 2);
-            const base_def = playerPoke.defense - (oldLvl * 2);
+            // Checa subida de nível
+            if (playerPoke.xp >= playerPoke.xp_needed) {
+                leveledUp = true;
+                playerPoke.lvl += 1;
+                playerPoke.xp = Math.max(0, playerPoke.xp - playerPoke.xp_needed);
+                playerPoke.xp_needed = playerPoke.lvl * 25; // Sobe o requerimento
 
-            playerPoke.hp_max = Math.round(base_hp + (playerPoke.lvl * 2));
-            playerPoke.attack = Math.round(base_atk + (playerPoke.lvl * 2));
-            playerPoke.defense = Math.round(base_def + (playerPoke.lvl * 2));
-            playerPoke.hp_atual = playerPoke.hp_max; // Cura total
+                // Recalcula atributos baseado no novo nível
+                const base_hp = playerPoke.hp_max - (oldLvl * 2);
+                const base_atk = playerPoke.attack - (oldLvl * 2);
+                const base_def = playerPoke.defense - (oldLvl * 2);
+
+                playerPoke.hp_max = Math.round(base_hp + (playerPoke.lvl * 2));
+                playerPoke.attack = Math.round(base_atk + (playerPoke.lvl * 2));
+                playerPoke.defense = Math.round(base_def + (playerPoke.lvl * 2));
+                playerPoke.hp_atual = playerPoke.hp_max; // Cura total no Level UP
+            } else {
+                // REGRA DE RECUPERAÇÃO DE VIDA (Sem Level Up) -> Ganha 30% HP máximo
+                const healAmount = Math.round(playerPoke.hp_max * 0.3);
+                playerPoke.hp_atual = Math.min(playerPoke.hp_max, playerPoke.hp_atual + healAmount);
+            }
 
             const modal = document.getElementById('battle-result-modal');
             const cardModal = document.getElementById('battle-result-card');
@@ -1218,10 +1470,15 @@
             icon.innerText = "🏆";
             title.innerText = "Você Venceu!";
             title.className = "text-xl md:text-2xl font-black text-green-400 uppercase";
-            desc.innerHTML = `Você derrotou o <strong>${GameState.battle.opponentTrainer}</strong>!<br>Seu Pokémon ganhou experiência em combate real!`;
+            desc.innerHTML = `Você derrotou o rival <strong>${GameState.battle.opponentTrainer}</strong>!<br>Seu Pokémon ganhou <strong class="text-pokeYellow">${xpGained} XP</strong> nesta batalha.`;
 
             lvlUpDetails.classList.remove('hidden');
-            lvlUpText.innerHTML = `${playerPoke.name} subiu do nível <strong class="text-pokeYellow">${oldLvl}</strong> para o <strong class="text-green-400">${playerPoke.lvl}</strong>!<br>Seus atributos aumentaram e ele foi totalmente curado.`;
+            if (leveledUp) {
+                lvlUpText.innerHTML = `🎉 <strong>Nível UP!</strong> ${playerPoke.name} subiu do nível <strong class="text-pokeYellow">${oldLvl}</strong> para o <strong class="text-green-400">${playerPoke.lvl}</strong>!<br>Todos os seus status subiram e ele foi totalmente curado!`;
+            } else {
+                const recoveredHp = Math.round(playerPoke.hp_max * 0.3);
+                lvlUpText.innerHTML = `❤️ <strong>Recompensa de Vida:</strong> Como não subiu de nível, seu Pokémon recuperou 30% do HP máximo (+<strong class="text-green-400">${recoveredHp} HP</strong>) para continuar explorando!`;
+            }
 
             modal.classList.remove('hidden');
         }
@@ -1229,7 +1486,7 @@
         function handleBattleDefeat() {
             GameState.battle.active = false;
             const playerPoke = GameState.team[GameState.activePokemonIndex];
-            playerPoke.hp_atual = playerPoke.hp_max; // Cura no Centro Pokémon
+            playerPoke.hp_atual = playerPoke.hp_max; // Cura automática no Centro Pokémon
 
             const modal = document.getElementById('battle-result-modal');
             const cardModal = document.getElementById('battle-result-card');
@@ -1270,7 +1527,7 @@
                 
                 if (index === GameState.activePokemonIndex) {
                     const activeBadge = document.createElement('div');
-                    activeBadge.className = "w-full mt-3 bg-pokeYellow text-gray-950 font-extrabold text-[10px] py-1.5 rounded-xl uppercase tracking-widest text-center border border-white";
+                    activeBadge.className = "w-full mt-3 bg-pokeYellow text-gray-950 font-extrabold text-[10px] py-1.5 rounded-xl uppercase tracking-widest text-center border border-white shadow";
                     activeBadge.innerText = "⭐ Parceiro Ativo";
                     card.appendChild(activeBadge);
                 } else {
@@ -1290,13 +1547,13 @@
             });
         }
 
-        // --- TELA 7: POKÉDEX (NOVA) ---
+        // --- TELA 7: POKÉDEX ---
         function openPokedexScreen() {
             showScreen('screen-pokedex');
             renderPokedex(true);
         }
 
-        // Lógica de Pré-carregamento em Background da Pokédex (Evita travar a UI)
+        // Sincronização em background otimizada da Pokédex
         async function preloadPokedexInBg() {
             try {
                 const listRes = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
@@ -1304,7 +1561,6 @@
                 const total = listData.results.length;
                 let loadedCount = 0;
 
-                // Carrega em pacotes paralelos de 15 para evitar gargalos e bloqueio de IP
                 const batchSize = 15;
                 for (let i = 0; i < total; i += batchSize) {
                     const batch = listData.results.slice(i, i + batchSize);
@@ -1322,16 +1578,13 @@
                     const batchResults = await Promise.all(batchPromises);
                     GameState.pokedexCache.push(...batchResults);
 
-                    // Atualiza a Pokédex em tempo real se o usuário já estiver nela
                     if (!document.getElementById('screen-pokedex').classList.contains('hidden')) {
                         renderPokedex(false);
                     }
 
-                    // Pausa leve para não sobrecarregar a API
                     await new Promise(resolve => setTimeout(resolve, 80));
                 }
 
-                // Esconde a barra de sincronização quando terminar
                 document.getElementById('pokedex-progress').classList.add('hidden');
             } catch (err) {
                 console.error("Erro ao sincronizar Pokédex em background", err);
@@ -1343,7 +1596,6 @@
             }
         }
 
-        // Parseador focado no formato enciclopédico da Pokédex
         function parsePokedexData(raw) {
             const types = raw.types.map(t => t.type.name);
             const base_hp = raw.stats.find(s => s.stat.name === 'hp').base_stat;
@@ -1351,17 +1603,15 @@
             const base_def = raw.stats.find(s => s.stat.name === 'defense').base_stat;
             const totalStats = base_hp + base_atk + base_def;
 
-            // Imagem oficial
             let image = raw.sprites.other['official-artwork'].front_default;
             if (!image) {
                 image = raw.sprites.front_default;
             }
 
-            // LÓGICA DE RARIDADE SIMULADA (Baseada no ID ou soma dos atributos de combate)
             let rarity = 'comum';
-            const legendaryIds = [144, 145, 146, 147, 148, 149, 150, 151]; // Articuno, Zapdos, Moltres, Dratini, etc.
+            const legendaryIds = [144, 145, 146, 147, 148, 149, 150, 151];
             
-            if (legendaryIds.includes(raw.id) || totalStats > 250) { // Na PokéAPI, a soma de HP+ATK+DEF de lendários supera 250 (Ex: Mewtwo ~350+)
+            if (legendaryIds.includes(raw.id) || totalStats > 250) { 
                 rarity = 'lendario';
             } else if ((raw.id >= 101 && raw.id <= 140) || (totalStats >= 190 && totalStats <= 250)) {
                 rarity = 'raro';
@@ -1376,11 +1626,10 @@
                 attack: base_atk,
                 defense: base_def,
                 rarity: rarity,
-                rawName: raw.name.toLowerCase() // Armazena para busca rápida
+                rawName: raw.name.toLowerCase() // Armazena em minúsculas conforme exigido
             };
         }
 
-        // Renderização Dinâmica e Filtros da Pokédex
         function renderPokedex(resetPagination = true) {
             if (resetPagination) {
                 GameState.pokedexLoadedLimit = 24;
@@ -1390,30 +1639,22 @@
             const loadMoreBtn = document.getElementById('pokedex-load-more');
             const noResults = document.getElementById('pokedex-no-results');
 
-            // Captura valores dos filtros e converte pesquisa para minúsculo
+            // Captura valores dos filtros e converte pesquisa textual para minúsculas
             const searchValue = document.getElementById('pokedex-search').value.trim().toLowerCase();
             const typeFilter = document.getElementById('pokedex-filter-type').value;
             const rarityFilter = document.getElementById('pokedex-filter-rarity').value;
 
-            // Filtra os dados em cache local
             const filtered = GameState.pokedexCache.filter(poke => {
-                // Filtro de Busca por texto ou ID exato
                 const matchesSearch = poke.rawName.includes(searchValue) || poke.id.toString() === searchValue;
-                // Filtro de Tipo
                 const matchesType = typeFilter === 'all' || poke.types.includes(typeFilter);
-                // Filtro de Raridade
                 const matchesRarity = rarityFilter === 'all' || poke.rarity === rarityFilter;
 
                 return matchesSearch && matchesType && matchesRarity;
             });
 
-            // Ordena por ID
             filtered.sort((a, b) => a.id - b.id);
-
-            // Paginação lógica
             const paginated = filtered.slice(0, GameState.pokedexLoadedLimit);
 
-            // Limpa grid
             grid.innerHTML = '';
 
             if (paginated.length === 0) {
@@ -1422,13 +1663,11 @@
             } else {
                 noResults.classList.add('hidden');
                 
-                // Renderiza cada card filtrado
                 paginated.forEach(poke => {
                     const card = createPokedexCardElement(poke);
                     grid.appendChild(card);
                 });
 
-                // Controla visibilidade do botão "Carregar Mais"
                 if (filtered.length > GameState.pokedexLoadedLimit) {
                     loadMoreBtn.classList.remove('hidden');
                 } else {
@@ -1437,47 +1676,43 @@
             }
         }
 
-        // Elemento de Card Individual para a Pokédex
         function createPokedexCardElement(pokemon) {
             const card = document.createElement('div');
             const mainType = pokemon.types[0];
-            
-            // Verifica dinamicamente se o usuário capturou este Pokémon nesta sessão de jogo
             const isCaptured = GameState.team.some(p => p.id === pokemon.id);
 
-            // Definição visual baseada na raridade calculada
+            // Borda visual baseada na raridade simulada
+            let rarityBorderClass = 'card-rarity-comum';
             let rarityBadge = '';
-            let rarityClass = 'rarity-comum';
+            
             if (pokemon.rarity === 'lendario') {
+                rarityBorderClass = 'card-rarity-lendario';
                 rarityBadge = '<span class="bg-yellow-500 text-yellow-950 font-black px-2 py-0.5 rounded-full text-[9px] uppercase border border-white tracking-wider">⭐ LENDÁRIO</span>';
-                rarityClass = 'rarity-glow-lendario';
             } else if (pokemon.rarity === 'raro') {
+                rarityBorderClass = 'card-rarity-raro';
                 rarityBadge = '<span class="bg-slate-300 text-slate-900 font-bold px-2 py-0.5 rounded-full text-[9px] uppercase border border-white tracking-wider">💎 RARO</span>';
-                rarityClass = 'rarity-glow-raro';
             } else {
-                rarityBadge = '<span class="bg-green-600 text-white font-medium px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wider">🟢 COMUM</span>';
+                rarityBorderClass = 'card-rarity-comum';
+                rarityBadge = '<span class="bg-slate-700 text-slate-200 font-medium px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wider">🟢 COMUM</span>';
             }
 
-            card.className = `pokemon-card card-${mainType} ${rarityClass} rounded-2xl p-4 flex flex-col items-center text-center select-none w-full max-w-[260px] relative`;
+            card.className = `pokemon-card card-${mainType} ${rarityBorderClass} rounded-2xl p-4 flex flex-col items-center text-center select-none w-full max-w-[260px] relative`;
 
             card.innerHTML = `
-                <!-- Top Status Bar -->
                 <div class="w-full flex justify-between items-center text-[10px] opacity-90 font-bold mb-1">
                     <span class="bg-black/30 px-2 py-0.5 rounded-full">#${pokemon.id}</span>
-                    <div class="flex items-center gap-1">
+                    <div>
                         ${isCaptured ? '<span class="bg-emerald-600/90 text-white font-extrabold px-1.5 py-0.5 rounded text-[8px] border border-white/20">CAPTURADO ✅</span>' : '<span class="bg-gray-800/80 text-gray-300 font-medium px-1.5 py-0.5 rounded text-[8px]">NÃO DESCOBERTO ❓</span>'}
                     </div>
                 </div>
 
-                <!-- Ilustração Oficial -->
                 <div class="w-24 h-24 relative flex items-center justify-center bg-black/10 rounded-full mt-1">
                     <img src="${pokemon.image}" alt="${pokemon.name}" class="w-20 h-20 object-contain drop-shadow-md animate-bounce-slow" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png'">
                 </div>
 
-                <!-- Nome e Raridade -->
                 <h3 class="text-base font-black tracking-wide mt-2 drop-shadow-sm">${pokemon.name}</h3>
                 <div class="mt-1 flex flex-col gap-1.5 items-center">
-                    <div class="flex gap-1">
+                    <div class="flex gap-1 flex-wrap justify-center">
                         ${pokemon.types.map(t => `<span class="bg-white/20 text-[10px] px-2 py-0.5 rounded-full capitalize font-semibold">${translateType(t)}</span>`).join('')}
                     </div>
                     <div>
@@ -1485,7 +1720,6 @@
                     </div>
                 </div>
 
-                <!-- Atributos Base de Combate -->
                 <div class="w-full grid grid-cols-3 gap-1 mt-3.5 text-[10px] font-bold">
                     <div class="bg-black/20 rounded-lg p-1">
                         <span class="block opacity-70 text-[7px] uppercase">HP BASE</span>
@@ -1505,14 +1739,23 @@
             return card;
         }
 
-        // --- UTILS: AUXILIARES ---
+        // --- UTILS: GERADOR DE CARDS DO TIME / BATALHAS ---
         function createPokemonCardElement(pokemon, inBattle = false) {
             const card = document.createElement('div');
             const mainType = pokemon.types[0];
-            card.className = `pokemon-card card-${mainType} rounded-2xl p-4 flex flex-col items-center text-center select-none w-full max-w-[260px]`;
+
+            // Borda dinâmica de raridade
+            let rarityBorderClass = 'card-rarity-comum';
+            if (pokemon.rarity === 'lendario') rarityBorderClass = 'card-rarity-lendario';
+            else if (pokemon.rarity === 'raro') rarityBorderClass = 'card-rarity-raro';
+
+            card.className = `pokemon-card card-${mainType} ${rarityBorderClass} rounded-2xl p-4 flex flex-col items-center text-center select-none w-full max-w-[260px]`;
             
             const hpPercent = (pokemon.hp_atual / pokemon.hp_max) * 100;
             const healthColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
+
+            // Barra de Experiência (XP)
+            const xpPercent = Math.min(100, (pokemon.xp / pokemon.xp_needed) * 100);
 
             card.innerHTML = `
                 <div class="w-full flex justify-between items-center text-[10px] opacity-90 font-bold mb-1">
@@ -1523,12 +1766,24 @@
                     <img src="${pokemon.image}" alt="${pokemon.name}" class="w-20 h-20 object-contain drop-shadow-md animate-bounce-slow" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png'">
                 </div>
                 <h3 class="text-base font-black tracking-wide mt-2 drop-shadow-sm">${pokemon.name}</h3>
-                <div class="flex gap-1 mt-1">
+                <div class="flex gap-1 mt-1 justify-center flex-wrap">
                     ${pokemon.types.map(t => `<span class="bg-white/20 text-[10px] px-2 py-0.5 rounded-full capitalize font-semibold">${translateType(t)}</span>`).join('')}
+                    <span class="bg-black/40 text-[8px] px-1.5 py-0.5 rounded uppercase font-bold text-pokeYellow">${pokemon.rarity}</span>
                 </div>
                 
+                <!-- Barra de Experiência RPG -->
+                <div class="w-full mt-2 px-1">
+                    <div class="flex justify-between items-center text-[8px] font-bold opacity-75 mb-0.5">
+                        <span>XP</span>
+                        <span>${pokemon.xp}/${pokemon.xp_needed}</span>
+                    </div>
+                    <div class="w-full bg-black/40 h-1.5 rounded-full overflow-hidden border border-white/5">
+                        <div class="h-full bg-blue-400 transition-all duration-300 animate-pulse" style="width: ${xpPercent}%"></div>
+                    </div>
+                </div>
+
                 <!-- HP Status com Barra Visual -->
-                <div class="w-full mt-3">
+                <div class="w-full mt-2">
                     <div class="flex justify-between items-center text-[10px] font-bold opacity-90 mb-1">
                         <span>HP</span>
                         <span>${pokemon.hp_atual}/${pokemon.hp_max}</span>
@@ -1553,7 +1808,7 @@
             return card;
         }
 
-        // Traduz tipos de pokémon para PT-BR
+        // Traduz tipos de pokémon de forma elegante para PT-BR
         function translateType(type) {
             const translations = {
                 grass: 'Planta',
