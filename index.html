@@ -1065,6 +1065,12 @@
             document.getElementById('battle-controls').classList.remove('hidden');
             document.getElementById('level-up-details').classList.add('hidden');
 
+            // --- CORREÇÃO DO BUG ---
+            // Sempre garantir que o botão de ataque seja reabilitado e limpo ao iniciar uma nova luta.
+            const attackBtn = document.getElementById('btn-battle-attack');
+            attackBtn.disabled = false;
+            attackBtn.classList.remove('opacity-50');
+
             const randomTrainer = TRAINER_NAMES[Math.floor(Math.random() * TRAINER_NAMES.length)];
             document.getElementById('opponent-trainer-name').innerText = randomTrainer;
             GameState.battle.opponentTrainer = randomTrainer;
