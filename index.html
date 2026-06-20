@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Card RPG - VMRS</title>
+    <!-- Tailwind CSS para design ágil e moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pokeBlue: '#3B4CCA',
+                        pokeBlueDark: '#2A3A8F',
+                        pokeYellow: '#FFDE00',
+                        pokeYellowDark: '#B3A125',
+                        pokeRed: '#FF1C1C',
+                        pokeRedDark: '#B31212',
+                        pokeGrass: '#4AD0B0',
+                        pokeFire: '#FB6C6C',
+                        pokeWater: '#76BDFE',
+                        pokeElectric: '#FFD751',
+                        pokeNormal: '#A8A77A',
+                        pokeDefault: '#CCCCCC'
+                    },
+                    fontFamily: {
+                        sans: ['Press Start 2P', 'Segoe UI', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts para estilo Pokémon Retro (estilizada com fonte de fallback legível) -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+        
+        .pokemon-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        /* Efeitos de Card Premium */
+        .pokemon-card {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .pokemon-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border-color: #FFDE00;
+        }
+
+        /* Brilhos para raridades na Pokédex */
+        .rarity-glow-raro {
+            box-shadow: 0 0 15px rgba(226, 232, 240, 0.4);
+            border: 2px solid rgba(226, 232, 240, 0.8);
+        }
+        .rarity-glow-lendario {
+            box-shadow: 0 0 20px rgba(255, 222, 0, 0.6);
+            border: 2px solid rgba(255, 222, 0, 0.9);
+            animation: pulse-border 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(255, 222, 0, 0.9); box-shadow: 0 0 15px rgba(255, 222, 0, 0.6); }
+            50% { border-color: rgba(255, 28, 28, 0.9); box-shadow: 0 0 25px rgba(255, 28, 28, 0.8); }
+        }
+
+        /* Cores de cards baseadas no tipo de pokemon */
+        .card-grass { background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%); }
+        .card-fire { background: linear-gradient(135deg, #c62828 0%, #ff5722 100%); }
+        .card-water { background: linear-gradient(135deg, #1565c0 0%, #2196f3 100%); }
+        .card-electric { background: linear-gradient(135deg, #f57f17 0%, #ffeb3b 100%); color: #333 !important; }
+        .card-normal { background: linear-gradient(135deg, #4e342e 0%, #8d6e63 100%); }
+        .card-bug { background: linear-gradient(135deg, #558b2f 0%, #9ccc65 100%); }
+        .card-poison { background: linear-gradient(135deg, #4a148c 0%, #ab47bc 100%); }
+        .card-ground { background: linear-gradient(135deg, #3e2723 0%, #a1887f 100%); }
+        .card-flying { background: linear-gradient(135deg, #1a237e 0%, #3f51b5 100%); }
+        .card-fairy { background: linear-gradient(135deg, #880e4f 0%, #e91e63 100%); }
+        .card-fighting { background: linear-gradient(135deg, #bf360c 0%, #ff5722 100%); }
+        .card-psychic { background: linear-gradient(135deg, #4a148c 0%, #ec407a 100%); }
+        .card-rock { background: linear-gradient(135deg, #3e2723 0%, #8d6e63 100%); }
+        .card-ghost { background: linear-gradient(135deg, #311b92 0%, #673ab7 100%); }
+        .card-dragon { background: linear-gradient(135deg, #0d47a1 0%, #3f51b5 100%); }
+        .card-default { background: linear-gradient(135deg, #37474f 0%, #78909c 100%); }
+
+        /* Animações */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 222, 0, 0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(255, 222, 0, 0); }
+        }
+        .pulse-btn {
+            animation: pulse-yellow 2s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Esconder barras de rolagem nativas sem quebrar comportamento */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Estilo para toque em mobile */
+        .touch-target {
+            min-height: 48px;
+        }
+    </style>
+</head>
+<body class="flex flex-col text-white antialiased no-scrollbar pb-16">
+
+    <!-- HEADER / LOGO -->
+    <header class="w-full text-center py-4 px-2 select-none z-10">
+        <div class="inline-block transform hover:scale-105 transition-transform duration-300">
+            <h1 class="text-3xl md:text-5xl font-extrabold tracking-wider text-pokeYellow flex flex-col md:flex-row items-center justify-center gap-2 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
+                <span class="pokemon-font text-xl md:text-2xl text-pokeBlue">POKÉMON</span>
+                <span class="bg-pokeRed text-white px-4 py-1 rounded-md text-sm md:text-lg border-2 border-white font-bold transform -rotate-2 shadow-lg">CARD RPG</span>
+            </h1>
+        </div>
+    </header>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="flex-grow w-full max-w-5xl mx-auto px-4 py-2 flex flex-col justify-center items-center">
+        
+        <!-- ==================== TELA 1: BOAS-VINDAS ==================== -->
+        <section id="screen-welcome" class="w-full max-w-lg bg-gray-900/85 backdrop-blur-md rounded-2xl p-6 border-4 border-pokeBlue shadow-2xl flex flex-col items-center gap-6 animate-fade-in">
+            <div class="text-center">
+                <div class="relative w-32 h-32 mx-auto animate-bounce-slow">
+                    <!-- Pokéball Artística SVG -->
+                    <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                        <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="6"/>
+                        <path d="M 5,50 A 45,45 0 0,1 95,50 Z" fill="#FF1C1C" stroke="#000" stroke-width="6"/>
+                        <line x1="5" y1="50" x2="95" y2="50" stroke="#000" stroke-width="8"/>
+                        <circle cx="50" cy="50" r="16" fill="#fff" stroke="#000" stroke-width="6"/>
+                        <circle cx="50" cy="50" r="8" fill="#e2e8f0" stroke="#a0aec0" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold mt-4 text-pokeYellow uppercase tracking-wide">Bem-vindo ao Mundo Pokémon!</h2>
+                <p class="text-gray-300 mt-2 text-sm leading-relaxed">
+                    Prepare-se para embarcar em uma aventura emocionante de RPG por turnos baseada em cartas. Capture monstrinhos, monte seu time ideal e desafie treinadores renomados!
+                </p>
+            </div>
+
+            <!-- Campo de nome -->
+            <div class="w-full">
+                <label for="player-name-input" class="block text-sm font-semibold text-gray-300 mb-2">Qual é o seu nome, jovem Treinador?</label>
+                <input type="text" id="player-name-input" maxlength="20" placeholder="Digite seu nome..." 
+                       class="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl text-white font-medium focus:outline-none focus:border-pokeYellow transition-colors duration-300 text-lg">
+                <p id="welcome-error" class="text-pokeRed text-xs font-bold mt-2 hidden">⚠️ Por favor, informe seu nome para começar!</p>
+            </div>
+
+            <button id="btn-start-journey" class="w-full touch-target bg-pokeYellow hover:bg-yellow-400 active:scale-95 text-gray-900 font-extrabold text-lg py-3.5 px-6 rounded-xl transition-all duration-300 shadow-lg border-b-4 border-pokeYellowDark hover:border-yellow-600 uppercase tracking-wider flex items-center justify-center gap-2">
+                Iniciar Jornada
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </section>
+
+        <!-- ==================== TELA 2: LABORATÓRIO DO PROFESSOR CARVALHO ==================== -->
+        <section id="screen-starter" class="w-full hidden flex flex-col items-center gap-6 animate-fade-in">
+            <div class="w-full bg-gray-900/85 backdrop-blur-md rounded-2xl p-6 border-4 border-green-600 shadow-xl max-w-4xl text-center">
+                <div class="flex items-center justify-center gap-3 mb-3">
+                    <span class="bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Laboratório do Carvalho</span>
+                </div>
+                <h2 class="text-xl md:text-2xl font-bold text-pokeYellow">Escolha seu Parceiro Inicial!</h2>
+                <p id="starter-welcome-text" class="text-sm md:text-base text-gray-300 mt-3 leading-relaxed max-w-2xl mx-auto">
+                    Carregando introdução...
+                </p>
+
+                <!-- Cronômetro de Escolha (Mecânica Secreta) -->
+                <div class="mt-4 flex flex-col items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Tempo de Decisão:</span>
+                        <span id="starter-timer" class="pokemon-font text-pokeRed font-bold text-sm">60s</span>
+                    </div>
+                    <div class="w-48 bg-gray-800 h-2 rounded-full overflow-hidden mt-1.5 border border-gray-700">
+                        <div id="starter-timer-bar" class="bg-pokeRed h-full transition-all duration-1000" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Div do Pikachu Secreto Popup -->
+            <div id="pikachu-secret-popup" class="hidden w-full max-w-xl bg-yellow-500/90 text-yellow-950 p-4 rounded-xl border-2 border-yellow-300 shadow-xl text-center font-bold text-sm md:text-base transform scale-95 transition-all duration-500">
+                ⚡ <span id="pikachu-popup-text">Você está indeciso(a)? Aqui, veja se este aqui é melhor para você!</span> ⚡
+            </div>
+
+            <!-- Loader de Pokémons -->
+            <div id="starter-loader" class="flex flex-col items-center gap-3 py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-pokeYellow"></div>
+                <p class="text-gray-300 font-semibold text-sm">Convocando os Pokémons da PokéAPI...</p>
+            </div>
+
+            <!-- Grid de Pokémons Iniciais -->
+            <div id="starter-container" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-center items-stretch py-4">
+                <!-- Cards Iniciais Gerados Dinamicamente Aqui -->
+            </div>
+
+            <!-- Modal/Popup de Confirmação da Transição -->
+            <div id="transition-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                <div class="bg-gray-900 border-4 border-pokeBlue rounded-2xl p-6 max-w-md w-full text-center shadow-2xl flex flex-col items-center gap-5">
+                    <div class="w-20 h-20 bg-pokeBlue/20 rounded-full flex items-center justify-center border-2 border-pokeBlue">
+                        <svg class="w-12 h-12 text-pokeYellow animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-pokeYellow">Excelente escolha!</h3>
+                    <p id="transition-modal-text" class="text-sm text-gray-300 leading-relaxed">
+                        Parabéns pelo seu parceiro.
+                    </p>
+                    <button id="btn-confirm-starter" class="w-full touch-target bg-pokeBlue hover:bg-pokeBlueDark text-white font-bold py-3 px-6 rounded-xl border-b-4 border-blue-900 active:scale-95 transition-all uppercase tracking-wider">
+                        Avançar Jornada
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TELA 3: MENU PRINCIPAL ==================== -->
+        <section id="screen-menu" class="w-full hidden flex flex-col items-center gap-6 animate-fade-in max-w-4xl">
+            <!-- Header do Treinador -->
+            <div class="w-full bg-gray-900/90 rounded-2xl p-5 border-2 border-pokeYellow/50 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pokeBlue flex items-center justify-center border-2 border-pokeYellow shadow">
+                        <span class="text-lg font-bold">🧢</span>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Treinador Ativo</p>
+                        <h2 id="menu-player-name" class="text-xl font-black text-pokeYellow tracking-wide">Nome</h2>
+                    </div>
+                </div>
+                <!-- Mini Status do Líder da Equipe -->
+                <div id="active-summary" class="flex items-center gap-3 bg-gray-800/80 px-4 py-2.5 rounded-xl border border-gray-700">
+                    <!-- Status do parceiro renderizado dinamicamente -->
+                </div>
+            </div>
+
+            <h3 class="text-lg md:text-xl font-bold text-gray-200 self-start border-l-4 border-pokeYellow pl-3">O que deseja fazer agora?</h3>
+
+            <!-- Opções do Menu -->
+            <div class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Opção 1: Grama Alta -->
+                <button id="menu-btn-explore" class="group relative flex flex-col items-center gap-3 bg-gradient-to-br from-green-800 to-green-950 p-5 rounded-2xl border-2 border-green-500 hover:border-green-300 shadow-lg hover:shadow-green-900/30 transition-all duration-300 transform hover:-translate-y-1 text-center touch-target">
+                    <div class="w-14 h-14 rounded-full bg-green-900/50 flex items-center justify-center border border-green-400 group-hover:scale-110 transition-transform">
+                        <span class="text-3xl">🌾</span>
+                    </div>
+                    <span class="text-base font-black text-green-300 uppercase tracking-wide">Grama Alta</span>
+                    <p class="text-xs text-gray-300">Procure Pokémons selvagens.</p>
+                </button>
+
+                <!-- Opção 2: Desafiar Treinador -->
+                <button id="menu-btn-battle" class="group relative flex flex-col items-center gap-3 bg-gradient-to-br from-red-800 to-red-950 p-5 rounded-2xl border-2 border-red-500 hover:border-red-300 shadow-lg hover:shadow-red-900/30 transition-all duration-300 transform hover:-translate-y-1 text-center touch-target">
+                    <div class="w-14 h-14 rounded-full bg-red-900/50 flex items-center justify-center border border-red-400 group-hover:scale-110 transition-transform pulse-btn">
+                        <span class="text-3xl">⚔️</span>
+                    </div>
+                    <span class="text-base font-black text-red-300 uppercase tracking-wide">Batalhar</span>
+                    <p class="text-xs text-gray-300">Desafie um treinador rival.</p>
+                </button>
+
+                <!-- Opção 3: Ver Time -->
+                <button id="menu-btn-bag" class="group relative flex flex-col items-center gap-3 bg-gradient-to-br from-blue-800 to-blue-950 p-5 rounded-2xl border-2 border-blue-500 hover:border-blue-300 shadow-lg hover:shadow-blue-900/30 transition-all duration-300 transform hover:-translate-y-1 text-center touch-target">
+                    <div class="w-14 h-14 rounded-full bg-blue-900/50 flex items-center justify-center border border-blue-400 group-hover:scale-110 transition-transform">
+                        <span class="text-3xl">🎒</span>
+                    </div>
+                    <span class="text-base font-black text-blue-300 uppercase tracking-wide">Meus Pokémon</span>
+                    <p class="text-xs text-gray-300">Veja seu time capturado.</p>
+                </button>
+
+                <!-- Opção 4: Pokédex -->
+                <button id="menu-btn-pokedex" class="group relative flex flex-col items-center gap-3 bg-gradient-to-br from-purple-850 to-purple-950 p-5 rounded-2xl border-2 border-purple-500 hover:border-purple-300 shadow-lg hover:shadow-purple-900/30 transition-all duration-300 transform hover:-translate-y-1 text-center touch-target" style="background: linear-gradient(135deg, #4a148c 0%, #1a0033 100%);">
+                    <div class="w-14 h-14 rounded-full bg-purple-900/50 flex items-center justify-center border border-purple-400 group-hover:scale-110 transition-transform">
+                        <span class="text-3xl">📱</span>
+                    </div>
+                    <span class="text-base font-black text-purple-300 uppercase tracking-wide">Pokédex</span>
+                    <p class="text-xs text-gray-300">Veja a enciclopédia Pokémon.</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== TELA 4: GRAMA ALTA (EXPLORAR) ==================== -->
+        <section id="screen-explore" class="w-full hidden flex flex-col items-center gap-6 animate-fade-in max-w-3xl">
+            <!-- Grama Animada Inicial / Explorando -->
+            <div id="explore-scanning" class="w-full bg-gray-900/80 p-10 rounded-2xl text-center border-4 border-green-500/50 flex flex-col items-center gap-4">
+                <div class="text-7xl animate-bounce">🌾🚶‍♂️🌾</div>
+                <h3 class="text-xl font-bold text-green-400">Vasculhando a grama alta...</h3>
+                <p class="text-gray-400 text-sm">Preste atenção nos barulhos ao redor!</p>
+                <div class="w-48 bg-gray-800 h-2.5 rounded-full overflow-hidden mt-2 border border-gray-700">
+                    <div class="bg-green-400 h-full animate-[pulse_1s_infinite]" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Resultado de Nada Encontrado -->
+            <div id="explore-nothing" class="hidden w-full bg-gray-900/80 p-8 rounded-2xl text-center border-2 border-gray-700 flex flex-col items-center gap-4">
+                <span class="text-6xl">🦗💨</span>
+                <p class="text-lg text-gray-300 font-semibold" id="explore-nothing-msg">Você caminhou pela grama alta, mas tudo parece calmo...</p>
+                <button class="btn-back-menu touch-target bg-gray-700 hover:bg-gray-600 px-6 py-2.5 rounded-xl border-b-4 border-gray-800 font-bold uppercase tracking-wider text-sm">
+                    Voltar ao Menu
+                </button>
+            </div>
+
+            <!-- Resultado: Pokémon Encontrado! -->
+            <div id="explore-encounter" class="hidden w-full flex flex-col items-center gap-6">
+                <div class="w-full bg-gradient-to-r from-green-900/50 to-emerald-900/50 border-y-4 border-green-500 py-4 text-center">
+                    <h2 class="text-2xl font-black text-pokeYellow tracking-widest uppercase animate-pulse">✨ POKÉMON SELVAGEM APARECEU! ✨</h2>
+                </div>
+
+                <div id="wild-card-container" class="flex justify-center w-full max-w-sm">
+                    <!-- Card Selvagem Rendereizado aqui -->
+                </div>
+
+                <!-- Painel de Decisão de Captura -->
+                <div id="explore-actions" class="w-full max-w-md bg-gray-900/95 p-6 rounded-2xl border-2 border-green-500/80 flex flex-col gap-4 text-center">
+                    <p class="text-base text-gray-200">Deseja tentar capturar esse Pokémon selvagem?</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="btn-capture-yes" class="touch-target bg-pokeYellow hover:bg-yellow-400 active:scale-95 text-gray-900 font-extrabold py-3.5 px-4 rounded-xl shadow-md border-b-4 border-pokeYellowDark hover:border-yellow-600 uppercase text-sm tracking-wider flex items-center justify-center gap-1.5">
+                            ⚪ Capturar (40%)
+                        </button>
+                        <button id="btn-capture-run" class="touch-target bg-gray-700 hover:bg-gray-600 active:scale-95 text-white font-extrabold py-3.5 px-4 rounded-xl border-b-4 border-gray-800 hover:border-gray-700 uppercase text-sm tracking-wider flex items-center justify-center">
+                            🏃 Fugir
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loader de Captura -->
+                <div id="capture-loader" class="hidden w-full max-w-md bg-gray-900 p-8 rounded-2xl border-2 border-pokeYellow text-center flex flex-col items-center gap-4">
+                    <div class="relative w-20 h-20 animate-[spin_2s_infinite]">
+                        <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow">
+                            <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="8"/>
+                            <path d="M 5,50 A 45,45 0 0,1 95,50 Z" fill="#FF1C1C" stroke="#000" stroke-width="8"/>
+                            <line x1="5" y1="50" x2="95" y2="50" stroke="#000" stroke-width="10"/>
+                            <circle cx="50" cy="50" r="16" fill="#fff" stroke="#000" stroke-width="8"/>
+                        </svg>
+                    </div>
+                    <p class="text-pokeYellow font-black uppercase text-sm animate-pulse">Lançando Pokébola...</p>
+                </div>
+
+                <!-- Resultado de Captura (Sucesso ou Falha) -->
+                <div id="capture-result" class="hidden w-full max-w-md bg-gray-900 p-6 rounded-2xl border-2 text-center flex flex-col items-center gap-4">
+                    <span id="capture-result-icon" class="text-6xl">🎉</span>
+                    <h3 id="capture-result-title" class="text-xl font-bold"></h3>
+                    <p id="capture-result-text" class="text-sm text-gray-300"></p>
+                    <button class="btn-back-menu touch-target w-full bg-pokeBlue hover:bg-pokeBlueDark text-white font-bold py-3 px-6 rounded-xl border-b-4 border-blue-900 active:scale-95 transition-all uppercase tracking-wider text-sm">
+                        Voltar ao Menu
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TELA 5: BATALHA RPG POR TURNOS ==================== -->
+        <section id="screen-battle" class="w-full hidden flex flex-col items-center gap-4 animate-fade-in max-w-4xl">
+            <!-- Cabeçalho do Confronto -->
+            <div class="w-full bg-red-600 text-white font-bold text-center py-2.5 px-4 rounded-xl border-2 border-white shadow-md uppercase tracking-wider text-xs md:text-sm flex flex-col sm:flex-row justify-between items-center gap-2">
+                <span class="flex items-center gap-1.5">🥊 Desafiante Inimigo: <span id="opponent-trainer-name" class="text-pokeYellow font-extrabold">Gary</span></span>
+                <span class="bg-black/40 px-3 py-1 rounded-full text-xs">Batalha Oficial</span>
+            </div>
+
+            <!-- Grid da Arena de Combate -->
+            <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 py-4 items-stretch">
+                <!-- MEU POKÉMON (Aliado) -->
+                <div class="flex flex-col items-center gap-3">
+                    <div class="bg-pokeBlue/30 border border-pokeBlue px-3 py-1 rounded-full text-xs font-bold text-pokeYellow tracking-wide self-start uppercase">Meu Ativo</div>
+                    <div id="battle-player-card" class="w-full flex justify-center">
+                        <!-- Card do Jogador -->
+                    </div>
+                </div>
+
+                <!-- POKÉMON ADVERSÁRIO (Inimigo) -->
+                <div class="flex flex-col items-center gap-3">
+                    <div class="bg-pokeRed/30 border border-pokeRed px-3 py-1 rounded-full text-xs font-bold text-pokeYellow tracking-wide self-start uppercase">Adversário</div>
+                    <div id="battle-opponent-card" class="w-full flex justify-center">
+                        <!-- Card do Inimigo -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diário / Logs de Combate -->
+            <div class="w-full bg-gray-950 rounded-2xl border-2 border-gray-800 p-4 shadow-inner flex flex-col gap-2 max-w-2xl">
+                <p class="text-xs text-gray-500 uppercase font-bold tracking-widest border-b border-gray-900 pb-1">Histórico de Combate</p>
+                <div id="battle-log" class="h-28 overflow-y-auto text-xs md:text-sm font-mono flex flex-col gap-1.5 scrollbar-thin scrollbar-thumb-gray-800">
+                    <!-- Logs da Batalha aqui -->
+                </div>
+            </div>
+
+            <!-- Painel de Controles de Batalha -->
+            <div id="battle-controls" class="w-full max-w-md bg-gray-900/90 p-5 rounded-2xl border-2 border-pokeRed flex flex-col gap-3 text-center">
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-battle-attack" class="touch-target bg-pokeRed hover:bg-red-500 active:scale-95 text-white font-extrabold py-3.5 px-4 rounded-xl border-b-4 border-pokeRedDark hover:border-red-600 uppercase text-sm tracking-wider flex items-center justify-center gap-1.5">
+                        💥 Atacar!
+                    </button>
+                    <button id="btn-battle-run" class="touch-target bg-gray-700 hover:bg-gray-600 active:scale-95 text-white font-bold py-3.5 px-4 rounded-xl border-b-4 border-gray-800 hover:border-gray-700 uppercase text-sm tracking-wider flex items-center justify-center">
+                        🏳️ Fugir
+                    </button>
+                </div>
+            </div>
+
+            <!-- Popups de Fim de Batalha (Vitória / Derrota) -->
+            <div id="battle-result-modal" class="hidden fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50">
+                <div id="battle-result-card" class="bg-gray-900 border-4 rounded-2xl p-6 max-w-md w-full text-center shadow-2xl flex flex-col items-center gap-4">
+                    <span id="battle-result-icon" class="text-6xl animate-bounce">🏆</span>
+                    <h3 id="battle-result-title" class="text-xl md:text-2xl font-black text-pokeYellow"></h3>
+                    <p id="battle-result-desc" class="text-sm md:text-base text-gray-300 leading-relaxed"></p>
+                    
+                    <!-- Mudança de Nível Secreta -->
+                    <div id="level-up-details" class="hidden w-full bg-gray-800 p-3.5 rounded-xl border border-gray-700 flex flex-col gap-1">
+                        <span class="text-xs font-bold text-green-400 uppercase tracking-widest">Nível UP! 📈</span>
+                        <p id="level-up-text" class="text-sm font-semibold"></p>
+                    </div>
+
+                    <button id="btn-battle-finish" class="w-full touch-target bg-pokeBlue hover:bg-pokeBlueDark text-white font-bold py-3 px-6 rounded-xl border-b-4 border-blue-900 active:scale-95 transition-all uppercase tracking-wider">
+                        Retornar ao Hub
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TELA 6: MEUS POKÉMONS (BAG) ==================== -->
+        <section id="screen-bag" class="w-full hidden flex flex-col items-center gap-6 animate-fade-in">
+            <div class="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-900/80 p-5 rounded-2xl border-2 border-pokeBlue/40">
+                <div>
+                    <h2 class="text-2xl font-black text-pokeYellow uppercase tracking-wider">Sua Coleção</h2>
+                    <p class="text-xs text-gray-400">Total de Pokémons capturados: <span id="bag-count" class="font-bold text-white text-sm">0</span></p>
+                </div>
+                <button class="btn-back-menu touch-target w-full sm:w-auto bg-gray-700 hover:bg-gray-600 px-6 py-2.5 rounded-xl border-b-4 border-gray-800 font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-1.5">
+                    ↩️ Voltar ao Menu
+                </button>
+            </div>
+
+            <!-- Grid Adaptável da Coleção -->
+            <div id="bag-grid" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-center">
+                <!-- Cards dos pokémons capturados serão renderizados aqui -->
+            </div>
+        </section>
+
+        <!-- ==================== TELA 7: POKÉDEX (NOVA SEÇÃO) ==================== -->
+        <section id="screen-pokedex" class="w-full hidden flex flex-col items-center gap-6 animate-fade-in">
+            <!-- Cabeçalho da Pokédex -->
+            <div class="w-full flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-900/90 p-5 rounded-2xl border-2 border-purple-500/40">
+                <div>
+                    <h2 class="text-2xl font-black text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                        <span>📱</span> POKÉDEX OFICIAL
+                    </h2>
+                    <p class="text-xs text-gray-400">Primeira Geração (Kanto ID 1 - 151)</p>
+                </div>
+                <button class="btn-back-menu touch-target w-full sm:w-auto bg-gray-700 hover:bg-gray-600 px-6 py-2.5 rounded-xl border-b-4 border-gray-800 font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-1.5">
+                    ↩️ Voltar ao Menu
+                </button>
+            </div>
+
+            <!-- Status de Sincronização do Banco de Dados em Background -->
+            <div id="pokedex-progress" class="w-full bg-purple-950/40 border border-purple-500/30 rounded-xl p-3 text-center text-xs text-purple-300 flex items-center justify-center gap-2">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
+                <span>Sincronizando dados em background com a PokéAPI para busca rápida... <strong id="pokedex-sync-percentage">0%</strong></span>
+            </div>
+
+            <!-- Filtros e Barra de Pesquisa -->
+            <div class="w-full bg-gray-900/80 p-4 rounded-xl border border-gray-800 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Barra de Pesquisa -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="pokedex-search" class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Pesquisar por Nome/ID</label>
+                    <input type="text" id="pokedex-search" placeholder="Ex: Charmander ou 4" 
+                           class="w-full touch-target px-4 bg-gray-800 border border-gray-700 rounded-xl text-white font-medium focus:outline-none focus:border-purple-500 transition-colors duration-200 text-sm">
+                </div>
+
+                <!-- Filtro por Tipo -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="pokedex-filter-type" class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Filtrar por Tipo</label>
+                    <select id="pokedex-filter-type" class="w-full touch-target px-3 bg-gray-800 border border-gray-700 rounded-xl text-white font-medium focus:outline-none focus:border-purple-500 transition-colors duration-200 text-sm">
+                        <option value="all">Todos os tipos</option>
+                        <option value="grass">Planta (Grass)</option>
+                        <option value="fire">Fogo (Fire)</option>
+                        <option value="water">Água (Water)</option>
+                        <option value="electric">Elétrico (Electric)</option>
+                        <option value="normal">Normal</option>
+                        <option value="poison">Veneno (Poison)</option>
+                        <option value="ground">Terra (Ground)</option>
+                        <option value="flying">Voador (Flying)</option>
+                        <option value="bug">Inseto (Bug)</option>
+                        <option value="fairy">Fada (Fairy)</option>
+                        <option value="fighting">Lutador (Fighting)</option>
+                        <option value="psychic">Psíquico (Psychic)</option>
+                        <option value="rock">Pedra (Rock)</option>
+                        <option value="ghost">Fantasma (Ghost)</option>
+                        <option value="dragon">Dragão (Dragon)</option>
+                    </select>
+                </div>
+
+                <!-- Filtro por Raridade -->
+                <div class="flex flex-col gap-1.5">
+                    <label for="pokedex-filter-rarity" class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Filtrar por Raridade</label>
+                    <select id="pokedex-filter-rarity" class="w-full touch-target px-3 bg-gray-800 border border-gray-700 rounded-xl text-white font-medium focus:outline-none focus:border-purple-500 transition-colors duration-200 text-sm">
+                        <option value="all">Todas as raridades</option>
+                        <option value="comum">🟢 Comum</option>
+                        <option value="raro">⚪ Raro</option>
+                        <option value="lendario">🟡 Lendário</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Listagem Dinâmica da Pokédex -->
+            <div id="pokedex-grid" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-center">
+                <!-- Cards de Pokédex Gerados Dinamicamente -->
+            </div>
+
+            <!-- Carregar Mais / Sem resultados -->
+            <div class="w-full flex flex-col items-center py-4">
+                <button id="pokedex-load-more" class="hidden touch-target bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-extrabold px-8 py-3 rounded-xl shadow-lg border-b-4 border-purple-800 hover:border-purple-600 uppercase tracking-wider text-sm">
+                    Carregar Mais Pokémons
+                </button>
+                <div id="pokedex-no-results" class="hidden text-center text-gray-400 py-10 flex flex-col items-center gap-2">
+                    <span class="text-5xl">🔍🚫</span>
+                    <p class="font-bold">Nenhum Pokémon encontrado com estes filtros!</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- NOTIFICAÇÃO CUSTOMIZADA (Substitui alert) -->
+    <div id="custom-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-900/95 border-2 border-pokeYellow px-6 py-3.5 rounded-xl shadow-2xl z-50 text-center font-bold text-sm md:text-base hidden max-w-sm w-11/12 animate-fade-in flex items-center gap-3">
+        <span id="toast-icon">💡</span>
+        <span id="toast-message" class="text-white">Aviso geral!</span>
+    </div>
+
+    <!-- RODAPÉ FIXO -->
+    <footer class="fixed bottom-0 left-0 w-full bg-gray-950/90 backdrop-blur-sm border-t border-gray-800 text-center py-2.5 text-[10px] md:text-xs text-gray-500 font-medium z-40">
+        Desenvolvido por VMRS Tecnologia
+    </footer>
+
+    <!-- LÓGICA DO JOGO -->
+    <script>
+        // --- MOTOR DE ÁUDIO RETRO ---
+        const AudioEngine = {
+            ctx: null,
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+
+            playClick() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            },
+
+            playLvlUp() {
+                this.init();
+                const notes = [261.63, 329.63, 392.00, 523.25]; // Dó, Mi, Sol, Dó
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + (idx * 0.12));
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime + (idx * 0.12));
+                    gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + (idx * 0.12) + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + (idx * 0.12));
+                    osc.stop(this.ctx.currentTime + (idx * 0.12) + 0.25);
+                });
+            },
+
+            playDamage() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            },
+
+            playPokeCatch() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(880, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+        };
+
+        // --- ESTADO DO JOGO ---
+        const GameState = {
+            playerName: '',
+            team: [], 
+            activePokemonIndex: 0, 
+            startersAvailable: [
+                { name: 'bulbasaur', id: 1 },
+                { name: 'charmander', id: 4 },
+                { name: 'squirtle', id: 7 }
+            ],
+            pikachuTriggered: false,
+            starterTimer: 60,
+            starterTimerId: null,
+            wildPokemon: null,
+            battle: {
+                opponent: null,
+                opponentTrainer: '',
+                turn: 'player', 
+                active: false
+            },
+            // Pokédex Caching & Pagination
+            pokedexCache: [],
+            pokedexLoadedLimit: 24, // Limite de amostragem inicial
+            pokedexIncrement: 24 // Quantidade para carregar no botão
+        };
+
+        const TRAINER_NAMES = [
+            "Gary Carvalho", "Líder Brock", "Líder Misty", "Treinador Cazalbé", 
+            "Campeão Lance", "Líder Sabrina", "Treinador Ash", "Treinadora Joey"
+        ];
+
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initEventListeners();
+            preloadPokedexInBg(); // Dispara carregamento em background imediatamente
+        });
+
+        function showScreen(screenId) {
+            const screens = ['screen-welcome', 'screen-starter', 'screen-menu', 'screen-explore', 'screen-battle', 'screen-bag', 'screen-pokedex'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.remove('hidden');
+                if (screenId === 'screen-menu') {
+                    renderMenuSummary();
+                }
+            }
+        }
+
+        function showToast(message, icon = '💡', borderClass = 'border-pokeYellow') {
+            const toast = document.getElementById('custom-toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toast.className = `fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-900/95 border-2 ${borderClass} px-6 py-3.5 rounded-xl shadow-2xl z-50 text-center font-bold text-sm md:text-base flex items-center gap-3 max-w-sm w-11/12 animate-fade-in`;
+            toastMsg.innerText = message;
+            toastIcon.innerText = icon;
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // --- EVENT LISTENERS ---
+        function initEventListeners() {
+            document.getElementById('btn-start-journey').addEventListener('click', () => {
+                AudioEngine.playClick();
+                const nameInput = document.getElementById('player-name-input').value.trim();
+                const welcomeError = document.getElementById('welcome-error');
+
+                if (!nameInput) {
+                    welcomeError.classList.remove('hidden');
+                    return;
+                }
+                welcomeError.classList.add('hidden');
+                GameState.playerName = nameInput;
+                setupStarterScreen();
+            });
+
+            document.getElementById('btn-confirm-starter').addEventListener('click', () => {
+                AudioEngine.playClick();
+                document.getElementById('transition-modal').classList.add('hidden');
+                showScreen('screen-menu');
+            });
+
+            document.getElementById('menu-btn-explore').addEventListener('click', () => {
+                AudioEngine.playClick();
+                startExploring();
+            });
+
+            document.getElementById('menu-btn-battle').addEventListener('click', () => {
+                AudioEngine.playClick();
+                startBattleScenario();
+            });
+
+            document.getElementById('menu-btn-bag').addEventListener('click', () => {
+                AudioEngine.playClick();
+                openBagScreen();
+            });
+
+            document.getElementById('menu-btn-pokedex').addEventListener('click', () => {
+                AudioEngine.playClick();
+                openPokedexScreen();
+            });
+
+            document.querySelectorAll('.btn-back-menu').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    AudioEngine.playClick();
+                    showScreen('screen-menu');
+                });
+            });
+
+            document.getElementById('btn-capture-yes').addEventListener('click', () => {
+                AudioEngine.playClick();
+                attemptCapture();
+            });
+
+            document.getElementById('btn-capture-run').addEventListener('click', () => {
+                AudioEngine.playClick();
+                showToast("Você fugiu em segurança!", "🏃");
+                showScreen('screen-menu');
+            });
+
+            document.getElementById('btn-battle-attack').addEventListener('click', () => {
+                executePlayerTurn();
+            });
+
+            document.getElementById('btn-battle-run').addEventListener('click', () => {
+                AudioEngine.playClick();
+                showToast("Você fugiu da batalha desesperadamente!", "🏳️");
+                showScreen('screen-menu');
+            });
+
+            document.getElementById('btn-battle-finish').addEventListener('click', () => {
+                AudioEngine.playClick();
+                document.getElementById('battle-result-modal').classList.add('hidden');
+                showScreen('screen-menu');
+            });
+
+            // Elementos de Busca/Filtro da Pokédex
+            document.getElementById('pokedex-search').addEventListener('input', () => {
+                renderPokedex(true);
+            });
+            document.getElementById('pokedex-filter-type').addEventListener('change', () => {
+                renderPokedex(true);
+            });
+            document.getElementById('pokedex-filter-rarity').addEventListener('change', () => {
+                renderPokedex(true);
+            });
+            document.getElementById('pokedex-load-more').addEventListener('click', () => {
+                AudioEngine.playClick();
+                GameState.pokedexLoadedLimit += GameState.pokedexIncrement;
+                renderPokedex(false);
+            });
+        }
+
+        // --- CÁLCULO E FORMATAÇÃO DE ATRIBUTOS ---
+        function parsePokemonData(apiData, lvl) {
+            const base_hp = apiData.stats.find(s => s.stat.name === 'hp').base_stat;
+            const base_atk = apiData.stats.find(s => s.stat.name === 'attack').base_stat;
+            const base_def = apiData.stats.find(s => s.stat.name === 'defense').base_stat;
+
+            const hp_max = Math.round(base_hp + (lvl * 2));
+            const attack = Math.round(base_atk + (lvl * 2));
+            const defense = Math.round(base_def + (lvl * 2));
+
+            const types = apiData.types.map(t => t.type.name);
+
+            let image = apiData.sprites.other['official-artwork'].front_default;
+            if (!image) {
+                image = apiData.sprites.front_default;
+            }
+
+            return {
+                id: apiData.id,
+                name: apiData.name.charAt(0).toUpperCase() + apiData.name.slice(1),
+                types: types,
+                image: image,
+                lvl: lvl,
+                hp_max: hp_max,
+                hp_atual: hp_max,
+                attack: attack,
+                defense: defense
+            };
+        }
+
+        // --- SISTEMA DA TELA 2 (STARTER CHOICES) ---
+        async function setupStarterScreen() {
+            showScreen('screen-starter');
+            const starterText = document.getElementById('starter-welcome-text');
+            starterText.innerHTML = `Olá, <span class="text-pokeYellow font-extrabold">${GameState.playerName}</span>! Bem-vindo ao meu Laboratório. Sua jornada começa hoje.<br><br>O mundo está cheio de mistérios e criaturas incríveis chamadas Pokémon. Para sua segurança fora da cidade, você precisa escolher um parceiro inicial. Pense bem, esta escolha definirá seus primeiros passos!`;
+
+            GameState.starterTimer = 60;
+            GameState.pikachuTriggered = false;
+            document.getElementById('starter-timer').innerText = `${GameState.starterTimer}s`;
+            document.getElementById('starter-timer-bar').style.width = "100%";
+            document.getElementById('pikachu-secret-popup').classList.add('hidden');
+
+            const starterContainer = document.getElementById('starter-container');
+            starterContainer.innerHTML = '';
+            document.getElementById('starter-loader').classList.remove('hidden');
+
+            try {
+                const fetchPromises = GameState.startersAvailable.map(poke => 
+                    fetch(`https://pokeapi.co/api/v2/pokemon/${poke.name}`).then(res => res.json())
+                );
+                const pokemonsRaw = await Promise.all(fetchPromises);
+                document.getElementById('starter-loader').classList.add('hidden');
+
+                pokemonsRaw.forEach(raw => {
+                    const parsed = parsePokemonData(raw, 5);
+                    renderStarterCard(parsed);
+                });
+
+                startStarterTimer();
+            } catch (err) {
+                console.error("Erro ao carregar iniciais da PokéAPI", err);
+                document.getElementById('starter-loader').classList.add('hidden');
+                showToast("Erro de conexão com PokéAPI. Recarregue.", "❌", "border-pokeRed");
+            }
+        }
+
+        function startStarterTimer() {
+            if (GameState.starterTimerId) clearInterval(GameState.starterTimerId);
+
+            GameState.starterTimerId = setInterval(async () => {
+                GameState.starterTimer--;
+                const percentage = (GameState.starterTimer / 60) * 100;
+                document.getElementById('starter-timer-bar').style.width = `${percentage}%`;
+                document.getElementById('starter-timer').innerText = `${GameState.starterTimer}s`;
+
+                if (GameState.starterTimer <= 0 && !GameState.pikachuTriggered) {
+                    clearInterval(GameState.starterTimerId);
+                    GameState.pikachuTriggered = true;
+                    try {
+                        const popup = document.getElementById('pikachu-secret-popup');
+                        popup.classList.remove('hidden');
+                        setTimeout(() => popup.classList.remove('scale-95'), 50);
+
+                        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/pikachu`);
+                        const raw = await res.json();
+                        const parsedPika = parsePokemonData(raw, 5);
+                        
+                        renderStarterCard(parsedPika, true);
+                        AudioEngine.playLvlUp();
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            }, 1000);
+        }
+
+        function renderStarterCard(pokemon, isSecret = false) {
+            const container = document.getElementById('starter-container');
+            const card = document.createElement('div');
+            const mainType = pokemon.types[0];
+            card.className = `pokemon-card card-${mainType} rounded-2xl p-4 flex flex-col items-center text-center cursor-pointer relative select-none ${isSecret ? 'border-4 border-yellow-300 animate-pulse' : ''}`;
+            
+            if (isSecret) {
+                const badge = document.createElement('span');
+                badge.className = 'absolute -top-3 bg-yellow-400 text-yellow-950 font-black px-2.5 py-0.5 rounded-full text-[9px] uppercase border border-white tracking-widest';
+                badge.innerText = "SURPRESA!";
+                card.appendChild(badge);
+            }
+
+            card.innerHTML += `
+                <div class="w-full flex justify-between items-center text-xs opacity-90 font-bold mb-1.5">
+                    <span class="bg-black/30 px-2 py-0.5 rounded-full">#${pokemon.id}</span>
+                    <span class="bg-black/30 px-2 py-0.5 rounded-full">LVL ${pokemon.lvl}</span>
+                </div>
+                <div class="w-28 h-28 relative flex items-center justify-center my-1 bg-black/10 rounded-full">
+                    <img src="${pokemon.image}" alt="${pokemon.name}" class="w-24 h-24 object-contain animate-bounce-slow drop-shadow-md" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png'">
+                </div>
+                <h3 class="text-lg font-black tracking-wide mt-2 drop-shadow-sm">${pokemon.name}</h3>
+                <div class="flex gap-1.5 mt-1.5">
+                    ${pokemon.types.map(t => `<span class="bg-white/20 text-xs px-2.5 py-0.5 rounded-full capitalize font-semibold">${translateType(t)}</span>`).join('')}
+                </div>
+                
+                <div class="w-full bg-black/20 rounded-xl p-2.5 mt-3 text-xs flex justify-around gap-1 font-semibold">
+                    <div class="text-center">
+                        <span class="block opacity-75 text-[10px] uppercase">HP</span>
+                        <span>${pokemon.hp_atual}/${pokemon.hp_max}</span>
+                    </div>
+                    <div class="w-[1px] bg-white/20"></div>
+                    <div class="text-center">
+                        <span class="block opacity-75 text-[10px] uppercase">ATK</span>
+                        <span>${pokemon.attack}</span>
+                    </div>
+                    <div class="w-[1px] bg-white/20"></div>
+                    <div class="text-center">
+                        <span class="block opacity-75 text-[10px] uppercase">DEF</span>
+                        <span>${pokemon.defense}</span>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                selectStarter(pokemon);
+            });
+            container.appendChild(card);
+        }
+
+        function selectStarter(pokemon) {
+            AudioEngine.playPokeCatch();
+            if (GameState.starterTimerId) clearInterval(GameState.starterTimerId);
+            GameState.team = [pokemon];
+            GameState.activePokemonIndex = 0;
+
+            const modal = document.getElementById('transition-modal');
+            const modalText = document.getElementById('transition-modal-text');
+            modalText.innerHTML = `Ótima escolha! Com seu novo parceiro <strong class="text-pokeYellow">${pokemon.name}</strong> ao seu lado, você arruma sua mochila e sai do laboratório para explorar o mundo!`;
+            modal.classList.remove('hidden');
+        }
+
+        // --- TELA 3 (MENU / HUD SUMMARY) ---
+        function renderMenuSummary() {
+            document.getElementById('menu-player-name').innerText = GameState.playerName;
+            const activeSummary = document.getElementById('active-summary');
+            const mainPoke = GameState.team[GameState.activePokemonIndex];
+
+            if (!mainPoke) return;
+
+            const hpPercent = (mainPoke.hp_atual / mainPoke.hp_max) * 100;
+            const healthColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
+
+            activeSummary.innerHTML = `
+                <div class="flex items-center gap-2.5">
+                    <img src="${mainPoke.image}" alt="${mainPoke.name}" class="w-10 h-10 object-contain drop-shadow" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${mainPoke.id}.png'">
+                    <div>
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="text-sm font-extrabold text-white">${mainPoke.name}</span>
+                            <span class="text-[10px] font-bold text-pokeYellow">LVL ${mainPoke.lvl}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <div class="w-20 bg-gray-700 h-1.5 rounded-full overflow-hidden border border-gray-600">
+                                <div class="h-full ${healthColor}" style="width: ${hpPercent}%"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-gray-300">${mainPoke.hp_atual}/${mainPoke.hp_max}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- TELA 4: GRAMA ALTA (EXPLORAÇÃO) ---
+        function startExploring() {
+            showScreen('screen-explore');
+            document.getElementById('explore-scanning').classList.remove('hidden');
+            document.getElementById('explore-nothing').classList.add('hidden');
+            document.getElementById('explore-encounter').classList.add('hidden');
+            document.getElementById('capture-loader').classList.add('hidden');
+            document.getElementById('capture-result').classList.add('hidden');
+
+            setTimeout(async () => {
+                const roll = Math.random();
+
+                if (roll < 0.5) {
+                    document.getElementById('explore-scanning').classList.add('hidden');
+                    document.getElementById('explore-nothing').classList.remove('hidden');
+                } else {
+                    document.getElementById('explore-scanning').classList.add('hidden');
+                    document.getElementById('explore-encounter').classList.remove('hidden');
+                    document.getElementById('explore-actions').classList.remove('hidden');
+
+                    const randomId = Math.floor(Math.random() * 151) + 1;
+                    const mainPoke = GameState.team[GameState.activePokemonIndex];
+                    
+                    const lvlOffset = Math.floor(Math.random() * 5) - 2; 
+                    const wildLevel = Math.max(2, mainPoke.lvl + lvlOffset);
+
+                    const cardContainer = document.getElementById('wild-card-container');
+                    cardContainer.innerHTML = `
+                        <div class="animate-pulse bg-gray-800 p-8 rounded-xl border border-gray-700 w-full text-center">
+                            <span class="text-sm text-gray-400 font-bold">Invocando criatura...</span>
+                        </div>
+                    `;
+
+                    try {
+                        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
+                        const raw = await res.json();
+                        GameState.wildPokemon = parsePokemonData(raw, wildLevel);
+                        
+                        cardContainer.innerHTML = '';
+                        cardContainer.appendChild(createPokemonCardElement(GameState.wildPokemon));
+                        AudioEngine.playClick();
+                    } catch (e) {
+                        console.error(e);
+                        showToast("Conexão falhou ao invocar Pokémon.", "❌", "border-pokeRed");
+                        showScreen('screen-menu');
+                    }
+                }
+            }, 2500); 
+        }
+
+        function attemptCapture() {
+            document.getElementById('explore-actions').classList.add('hidden');
+            document.getElementById('capture-loader').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('capture-loader').classList.add('hidden');
+                
+                const captureResult = document.getElementById('capture-result');
+                const resultIcon = document.getElementById('capture-result-icon');
+                const resultTitle = document.getElementById('capture-result-title');
+                const resultText = document.getElementById('capture-result-text');
+
+                const roll = Math.random();
+
+                if (roll < 0.4) {
+                    AudioEngine.playPokeCatch();
+                    resultIcon.innerText = "🎉";
+                    resultTitle.innerText = "Sucesso Absoluto!";
+                    resultTitle.className = "text-xl font-black text-green-400";
+                    resultText.innerHTML = `Parabéns! <strong class="text-pokeYellow">${GameState.wildPokemon.name}</strong> foi capturado e adicionado ao seu time!`;
+                    
+                    GameState.team.push(GameState.wildPokemon);
+                    captureResult.className = "w-full max-w-md bg-gray-900 p-6 rounded-2xl border-2 border-green-500 text-center flex flex-col items-center gap-4 animate-fade-in";
+                } else {
+                    AudioEngine.playDamage();
+                    resultIcon.innerText = "💨";
+                    resultTitle.innerText = "Ah, não!";
+                    resultTitle.className = "text-xl font-black text-pokeRed";
+                    resultText.innerHTML = `O <strong>${GameState.wildPokemon.name}</strong> escapou e fugiu para o meio dos arbustos! Tente novamente em outra grama.`;
+                    
+                    captureResult.className = "w-full max-w-md bg-gray-900 p-6 rounded-2xl border-2 border-pokeRed text-center flex flex-col items-center gap-4 animate-fade-in";
+                }
+
+                captureResult.classList.remove('hidden');
+            }, 2000); 
+        }
+
+        // --- TELA 5: BATALHA RPG POR TURNOS ---
+        async function startBattleScenario() {
+            showScreen('screen-battle');
+            document.getElementById('battle-log').innerHTML = '';
+            document.getElementById('battle-controls').classList.remove('hidden');
+            document.getElementById('level-up-details').classList.add('hidden');
+
+            const randomTrainer = TRAINER_NAMES[Math.floor(Math.random() * TRAINER_NAMES.length)];
+            document.getElementById('opponent-trainer-name').innerText = randomTrainer;
+            GameState.battle.opponentTrainer = randomTrainer;
+
+            const playerPoke = GameState.team[GameState.activePokemonIndex];
+            
+            if (playerPoke.hp_atual <= 0) {
+                playerPoke.hp_atual = playerPoke.hp_max;
+                addBattleLog(`🏥 Seu ${playerPoke.name} foi revitalizado antes da luta!`);
+            }
+
+            const enemyId = Math.floor(Math.random() * 151) + 1;
+            const maxPlayerLevel = Math.max(...GameState.team.map(p => p.lvl));
+            const enemyLevel = maxPlayerLevel + Math.floor(Math.random() * 3); 
+
+            const playerCardCont = document.getElementById('battle-player-card');
+            const opponentCardCont = document.getElementById('battle-opponent-card');
+
+            playerCardCont.innerHTML = `<div class="animate-pulse bg-gray-800 p-6 rounded-xl border border-gray-700 w-full text-center"><span class="text-sm text-gray-400 font-bold">Preparando card...</span></div>`;
+            opponentCardCont.innerHTML = `<div class="animate-pulse bg-gray-800 p-6 rounded-xl border border-gray-700 w-full text-center"><span class="text-sm text-gray-400 font-bold">Convocando oponente...</span></div>`;
+
+            try {
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${enemyId}`);
+                const raw = await res.json();
+                
+                GameState.battle.opponent = parsePokemonData(raw, enemyLevel);
+                GameState.battle.active = true;
+                GameState.battle.turn = 'player';
+
+                renderBattleCards();
+
+                addBattleLog(`⚔️ ${randomTrainer} enviou ${GameState.battle.opponent.name} (LVL ${GameState.battle.opponent.lvl})!`);
+                addBattleLog(`⭐ Vai, ${playerPoke.name}! Mostre sua força!`);
+            } catch (e) {
+                console.error(e);
+                showToast("Falha ao carregar batalha.", "❌", "border-pokeRed");
+                showScreen('screen-menu');
+            }
+        }
+
+        function renderBattleCards() {
+            const playerCardCont = document.getElementById('battle-player-card');
+            const opponentCardCont = document.getElementById('battle-opponent-card');
+
+            playerCardCont.innerHTML = '';
+            opponentCardCont.innerHTML = '';
+
+            const playerPoke = GameState.team[GameState.activePokemonIndex];
+            const oppPoke = GameState.battle.opponent;
+
+            playerCardCont.appendChild(createPokemonCardElement(playerPoke, true));
+            opponentCardCont.appendChild(createPokemonCardElement(oppPoke, true));
+        }
+
+        function executePlayerTurn() {
+            if (!GameState.battle.active || GameState.battle.turn !== 'player') return;
+
+            const playerPoke = GameState.team[GameState.activePokemonIndex];
+            const oppPoke = GameState.battle.opponent;
+
+            AudioEngine.playClick();
+            
+            const oppCardEl = document.getElementById('battle-opponent-card').firstChild;
+            if (oppCardEl) {
+                oppCardEl.classList.add('shake-animation');
+                setTimeout(() => oppCardEl.classList.remove('shake-animation'), 500);
+            }
+
+            let damage = playerPoke.attack - oppPoke.defense;
+            if (damage < 1) damage = 1;
+
+            oppPoke.hp_atual = Math.max(0, oppPoke.hp_atual - damage);
+            AudioEngine.playDamage();
+
+            addBattleLog(`💥 ${playerPoke.name} atacou e causou ${damage} de dano!`);
+            renderBattleCards();
+
+            if (oppPoke.hp_atual <= 0) {
+                handleBattleVictory();
+            } else {
+                GameState.battle.turn = 'opponent';
+                document.getElementById('btn-battle-attack').disabled = true;
+                document.getElementById('btn-battle-attack').classList.add('opacity-50');
+                setTimeout(executeOpponentTurn, 1500);
+            }
+        }
+
+        function executeOpponentTurn() {
+            if (!GameState.battle.active || GameState.battle.turn !== 'opponent') return;
+
+            const playerPoke = GameState.team[GameState.activePokemonIndex];
+            const oppPoke = GameState.battle.opponent;
+
+            const playerCardEl = document.getElementById('battle-player-card').firstChild;
+            if (playerCardEl) {
+                playerCardEl.classList.add('shake-animation');
+                setTimeout(() => playerCardEl.classList.remove('shake-animation'), 500);
+            }
+
+            let damage = oppPoke.attack - playerPoke.defense;
+            if (damage < 1) damage = 1;
+
+            playerPoke.hp_atual = Math.max(0, playerPoke.hp_atual - damage);
+            AudioEngine.playDamage();
+
+            addBattleLog(`⚠️ ${oppPoke.name} inimigo contra-atacou causando ${damage} de dano!`);
+            renderBattleCards();
+
+            if (playerPoke.hp_atual <= 0) {
+                handleBattleDefeat();
+            } else {
+                GameState.battle.turn = 'player';
+                document.getElementById('btn-battle-attack').disabled = false;
+                document.getElementById('btn-battle-attack').classList.remove('opacity-50');
+            }
+        }
+
+        function handleBattleVictory() {
+            GameState.battle.active = false;
+            AudioEngine.playLvlUp();
+
+            const playerPoke = GameState.team[GameState.activePokemonIndex];
+            const oldLvl = playerPoke.lvl;
+            playerPoke.lvl += 1;
+
+            // Atributo = Base + (lvl * 2) conforme diretriz
+            const base_hp = playerPoke.hp_max - (oldLvl * 2);
+            const base_atk = playerPoke.attack - (oldLvl * 2);
+            const base_def = playerPoke.defense - (oldLvl * 2);
+
+            playerPoke.hp_max = Math.round(base_hp + (playerPoke.lvl * 2));
+            playerPoke.attack = Math.round(base_atk + (playerPoke.lvl * 2));
+            playerPoke.defense = Math.round(base_def + (playerPoke.lvl * 2));
+            playerPoke.hp_atual = playerPoke.hp_max; // Cura total
+
+            const modal = document.getElementById('battle-result-modal');
+            const cardModal = document.getElementById('battle-result-card');
+            const title = document.getElementById('battle-result-title');
+            const desc = document.getElementById('battle-result-desc');
+            const icon = document.getElementById('battle-result-icon');
+            const lvlUpDetails = document.getElementById('level-up-details');
+            const lvlUpText = document.getElementById('level-up-text');
+
+            cardModal.className = "bg-gray-900 border-4 border-green-500 rounded-2xl p-6 max-w-md w-full text-center shadow-2xl flex flex-col items-center gap-4 animate-fade-in";
+            icon.innerText = "🏆";
+            title.innerText = "Você Venceu!";
+            title.className = "text-xl md:text-2xl font-black text-green-400 uppercase";
+            desc.innerHTML = `Você derrotou o <strong>${GameState.battle.opponentTrainer}</strong>!<br>Seu Pokémon ganhou experiência em combate real!`;
+
+            lvlUpDetails.classList.remove('hidden');
+            lvlUpText.innerHTML = `${playerPoke.name} subiu do nível <strong class="text-pokeYellow">${oldLvl}</strong> para o <strong class="text-green-400">${playerPoke.lvl}</strong>!<br>Seus atributos aumentaram e ele foi totalmente curado.`;
+
+            modal.classList.remove('hidden');
+        }
+
+        function handleBattleDefeat() {
+            GameState.battle.active = false;
+            const playerPoke = GameState.team[GameState.activePokemonIndex];
+            playerPoke.hp_atual = playerPoke.hp_max; // Cura no Centro Pokémon
+
+            const modal = document.getElementById('battle-result-modal');
+            const cardModal = document.getElementById('battle-result-card');
+            const title = document.getElementById('battle-result-title');
+            const desc = document.getElementById('battle-result-desc');
+            const icon = document.getElementById('battle-result-icon');
+            const lvlUpDetails = document.getElementById('level-up-details');
+
+            cardModal.className = "bg-gray-900 border-4 border-pokeRed rounded-2xl p-6 max-w-md w-full text-center shadow-2xl flex flex-col items-center gap-4 animate-fade-in";
+            icon.innerText = "🏥";
+            title.innerText = "Derrota!";
+            title.className = "text-xl md:text-2xl font-black text-pokeRed uppercase";
+            desc.innerHTML = `Seu <strong>${playerPoke.name}</strong> desmaiou!<br>Você correu para o Centro Pokémon mais próximo para descansá-lo e recuperar todas as suas energias.`;
+
+            lvlUpDetails.classList.add('hidden');
+            modal.classList.remove('hidden');
+        }
+
+        function addBattleLog(text) {
+            const logBox = document.getElementById('battle-log');
+            const logItem = document.createElement('p');
+            logItem.innerHTML = text;
+            logBox.appendChild(logItem);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // --- TELA 6: MEUS POKÉMONS (BAG) ---
+        function openBagScreen() {
+            showScreen('screen-bag');
+            const countLabel = document.getElementById('bag-count');
+            countLabel.innerText = GameState.team.length;
+
+            const grid = document.getElementById('bag-grid');
+            grid.innerHTML = '';
+
+            GameState.team.forEach((poke, index) => {
+                const card = createPokemonCardElement(poke, false);
+                
+                if (index === GameState.activePokemonIndex) {
+                    const activeBadge = document.createElement('div');
+                    activeBadge.className = "w-full mt-3 bg-pokeYellow text-gray-950 font-extrabold text-[10px] py-1.5 rounded-xl uppercase tracking-widest text-center border border-white";
+                    activeBadge.innerText = "⭐ Parceiro Ativo";
+                    card.appendChild(activeBadge);
+                } else {
+                    const selectBtn = document.createElement('button');
+                    selectBtn.className = "w-full mt-3 bg-pokeBlue hover:bg-pokeBlueDark text-white font-extrabold text-[10px] py-2 rounded-xl uppercase tracking-widest text-center transition-colors border-b-2 border-blue-900 active:scale-95 touch-target";
+                    selectBtn.innerText = "Escolher Parceiro";
+                    selectBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        AudioEngine.playPokeCatch();
+                        GameState.activePokemonIndex = index;
+                        showToast(`${poke.name} agora é seu parceiro de equipe principal!`, "⚡");
+                        openBagScreen();
+                    });
+                    card.appendChild(selectBtn);
+                }
+                grid.appendChild(card);
+            });
+        }
+
+        // --- TELA 7: POKÉDEX (NOVA) ---
+        function openPokedexScreen() {
+            showScreen('screen-pokedex');
+            renderPokedex(true);
+        }
+
+        // Lógica de Pré-carregamento em Background da Pokédex (Evita travar a UI)
+        async function preloadPokedexInBg() {
+            try {
+                const listRes = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+                const listData = await listRes.json();
+                const total = listData.results.length;
+                let loadedCount = 0;
+
+                // Carrega em pacotes paralelos de 15 para evitar gargalos e bloqueio de IP
+                const batchSize = 15;
+                for (let i = 0; i < total; i += batchSize) {
+                    const batch = listData.results.slice(i, i + batchSize);
+                    const batchPromises = batch.map(pokeItem => 
+                        fetch(pokeItem.url)
+                            .then(res => res.json())
+                            .then(raw => {
+                                loadedCount++;
+                                const progressPercentage = Math.round((loadedCount / total) * 100);
+                                document.getElementById('pokedex-sync-percentage').innerText = `${progressPercentage}%`;
+                                return parsePokedexData(raw);
+                            })
+                    );
+
+                    const batchResults = await Promise.all(batchPromises);
+                    GameState.pokedexCache.push(...batchResults);
+
+                    // Atualiza a Pokédex em tempo real se o usuário já estiver nela
+                    if (!document.getElementById('screen-pokedex').classList.contains('hidden')) {
+                        renderPokedex(false);
+                    }
+
+                    // Pausa leve para não sobrecarregar a API
+                    await new Promise(resolve => setTimeout(resolve, 80));
+                }
+
+                // Esconde a barra de sincronização quando terminar
+                document.getElementById('pokedex-progress').classList.add('hidden');
+            } catch (err) {
+                console.error("Erro ao sincronizar Pokédex em background", err);
+                const syncText = document.getElementById('pokedex-progress');
+                if (syncText) {
+                    syncText.className = "w-full bg-red-950/40 border border-red-500/30 rounded-xl p-3 text-center text-xs text-red-300";
+                    syncText.innerHTML = "⚠️ Falha ao sincronizar dados offline da Pokédex de forma completa. Algumas buscas podem falhar.";
+                }
+            }
+        }
+
+        // Parseador focado no formato enciclopédico da Pokédex
+        function parsePokedexData(raw) {
+            const types = raw.types.map(t => t.type.name);
+            const base_hp = raw.stats.find(s => s.stat.name === 'hp').base_stat;
+            const base_atk = raw.stats.find(s => s.stat.name === 'attack').base_stat;
+            const base_def = raw.stats.find(s => s.stat.name === 'defense').base_stat;
+            const totalStats = base_hp + base_atk + base_def;
+
+            // Imagem oficial
+            let image = raw.sprites.other['official-artwork'].front_default;
+            if (!image) {
+                image = raw.sprites.front_default;
+            }
+
+            // LÓGICA DE RARIDADE SIMULADA (Baseada no ID ou soma dos atributos de combate)
+            let rarity = 'comum';
+            const legendaryIds = [144, 145, 146, 147, 148, 149, 150, 151]; // Articuno, Zapdos, Moltres, Dratini, etc.
+            
+            if (legendaryIds.includes(raw.id) || totalStats > 250) { // Na PokéAPI, a soma de HP+ATK+DEF de lendários supera 250 (Ex: Mewtwo ~350+)
+                rarity = 'lendario';
+            } else if ((raw.id >= 101 && raw.id <= 140) || (totalStats >= 190 && totalStats <= 250)) {
+                rarity = 'raro';
+            }
+
+            return {
+                id: raw.id,
+                name: raw.name.charAt(0).toUpperCase() + raw.name.slice(1),
+                types: types,
+                image: image,
+                hp: base_hp,
+                attack: base_atk,
+                defense: base_def,
+                rarity: rarity,
+                rawName: raw.name.toLowerCase() // Armazena para busca rápida
+            };
+        }
+
+        // Renderização Dinâmica e Filtros da Pokédex
+        function renderPokedex(resetPagination = true) {
+            if (resetPagination) {
+                GameState.pokedexLoadedLimit = 24;
+            }
+
+            const grid = document.getElementById('pokedex-grid');
+            const loadMoreBtn = document.getElementById('pokedex-load-more');
+            const noResults = document.getElementById('pokedex-no-results');
+
+            // Captura valores dos filtros e converte pesquisa para minúsculo
+            const searchValue = document.getElementById('pokedex-search').value.trim().toLowerCase();
+            const typeFilter = document.getElementById('pokedex-filter-type').value;
+            const rarityFilter = document.getElementById('pokedex-filter-rarity').value;
+
+            // Filtra os dados em cache local
+            const filtered = GameState.pokedexCache.filter(poke => {
+                // Filtro de Busca por texto ou ID exato
+                const matchesSearch = poke.rawName.includes(searchValue) || poke.id.toString() === searchValue;
+                // Filtro de Tipo
+                const matchesType = typeFilter === 'all' || poke.types.includes(typeFilter);
+                // Filtro de Raridade
+                const matchesRarity = rarityFilter === 'all' || poke.rarity === rarityFilter;
+
+                return matchesSearch && matchesType && matchesRarity;
+            });
+
+            // Ordena por ID
+            filtered.sort((a, b) => a.id - b.id);
+
+            // Paginação lógica
+            const paginated = filtered.slice(0, GameState.pokedexLoadedLimit);
+
+            // Limpa grid
+            grid.innerHTML = '';
+
+            if (paginated.length === 0) {
+                noResults.classList.remove('hidden');
+                loadMoreBtn.classList.add('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                
+                // Renderiza cada card filtrado
+                paginated.forEach(poke => {
+                    const card = createPokedexCardElement(poke);
+                    grid.appendChild(card);
+                });
+
+                // Controla visibilidade do botão "Carregar Mais"
+                if (filtered.length > GameState.pokedexLoadedLimit) {
+                    loadMoreBtn.classList.remove('hidden');
+                } else {
+                    loadMoreBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        // Elemento de Card Individual para a Pokédex
+        function createPokedexCardElement(pokemon) {
+            const card = document.createElement('div');
+            const mainType = pokemon.types[0];
+            
+            // Verifica dinamicamente se o usuário capturou este Pokémon nesta sessão de jogo
+            const isCaptured = GameState.team.some(p => p.id === pokemon.id);
+
+            // Definição visual baseada na raridade calculada
+            let rarityBadge = '';
+            let rarityClass = 'rarity-comum';
+            if (pokemon.rarity === 'lendario') {
+                rarityBadge = '<span class="bg-yellow-500 text-yellow-950 font-black px-2 py-0.5 rounded-full text-[9px] uppercase border border-white tracking-wider">⭐ LENDÁRIO</span>';
+                rarityClass = 'rarity-glow-lendario';
+            } else if (pokemon.rarity === 'raro') {
+                rarityBadge = '<span class="bg-slate-300 text-slate-900 font-bold px-2 py-0.5 rounded-full text-[9px] uppercase border border-white tracking-wider">💎 RARO</span>';
+                rarityClass = 'rarity-glow-raro';
+            } else {
+                rarityBadge = '<span class="bg-green-600 text-white font-medium px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wider">🟢 COMUM</span>';
+            }
+
+            card.className = `pokemon-card card-${mainType} ${rarityClass} rounded-2xl p-4 flex flex-col items-center text-center select-none w-full max-w-[260px] relative`;
+
+            card.innerHTML = `
+                <!-- Top Status Bar -->
+                <div class="w-full flex justify-between items-center text-[10px] opacity-90 font-bold mb-1">
+                    <span class="bg-black/30 px-2 py-0.5 rounded-full">#${pokemon.id}</span>
+                    <div class="flex items-center gap-1">
+                        ${isCaptured ? '<span class="bg-emerald-600/90 text-white font-extrabold px-1.5 py-0.5 rounded text-[8px] border border-white/20">CAPTURADO ✅</span>' : '<span class="bg-gray-800/80 text-gray-300 font-medium px-1.5 py-0.5 rounded text-[8px]">NÃO DESCOBERTO ❓</span>'}
+                    </div>
+                </div>
+
+                <!-- Ilustração Oficial -->
+                <div class="w-24 h-24 relative flex items-center justify-center bg-black/10 rounded-full mt-1">
+                    <img src="${pokemon.image}" alt="${pokemon.name}" class="w-20 h-20 object-contain drop-shadow-md animate-bounce-slow" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png'">
+                </div>
+
+                <!-- Nome e Raridade -->
+                <h3 class="text-base font-black tracking-wide mt-2 drop-shadow-sm">${pokemon.name}</h3>
+                <div class="mt-1 flex flex-col gap-1.5 items-center">
+                    <div class="flex gap-1">
+                        ${pokemon.types.map(t => `<span class="bg-white/20 text-[10px] px-2 py-0.5 rounded-full capitalize font-semibold">${translateType(t)}</span>`).join('')}
+                    </div>
+                    <div>
+                        ${rarityBadge}
+                    </div>
+                </div>
+
+                <!-- Atributos Base de Combate -->
+                <div class="w-full grid grid-cols-3 gap-1 mt-3.5 text-[10px] font-bold">
+                    <div class="bg-black/20 rounded-lg p-1">
+                        <span class="block opacity-70 text-[7px] uppercase">HP BASE</span>
+                        <span>❤️ ${pokemon.hp}</span>
+                    </div>
+                    <div class="bg-black/20 rounded-lg p-1">
+                        <span class="block opacity-70 text-[7px] uppercase">ATK BASE</span>
+                        <span>⚔️ ${pokemon.attack}</span>
+                    </div>
+                    <div class="bg-black/20 rounded-lg p-1">
+                        <span class="block opacity-70 text-[7px] uppercase">DEF BASE</span>
+                        <span>🛡️ ${pokemon.defense}</span>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // --- UTILS: AUXILIARES ---
+        function createPokemonCardElement(pokemon, inBattle = false) {
+            const card = document.createElement('div');
+            const mainType = pokemon.types[0];
+            card.className = `pokemon-card card-${mainType} rounded-2xl p-4 flex flex-col items-center text-center select-none w-full max-w-[260px]`;
+            
+            const hpPercent = (pokemon.hp_atual / pokemon.hp_max) * 100;
+            const healthColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
+
+            card.innerHTML = `
+                <div class="w-full flex justify-between items-center text-[10px] opacity-90 font-bold mb-1">
+                    <span class="bg-black/30 px-2 py-0.5 rounded-full">#${pokemon.id}</span>
+                    <span class="bg-black/30 px-2 py-0.5 rounded-full">LVL ${pokemon.lvl}</span>
+                </div>
+                <div class="w-24 h-24 relative flex items-center justify-center bg-black/10 rounded-full">
+                    <img src="${pokemon.image}" alt="${pokemon.name}" class="w-20 h-20 object-contain drop-shadow-md animate-bounce-slow" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png'">
+                </div>
+                <h3 class="text-base font-black tracking-wide mt-2 drop-shadow-sm">${pokemon.name}</h3>
+                <div class="flex gap-1 mt-1">
+                    ${pokemon.types.map(t => `<span class="bg-white/20 text-[10px] px-2 py-0.5 rounded-full capitalize font-semibold">${translateType(t)}</span>`).join('')}
+                </div>
+                
+                <!-- HP Status com Barra Visual -->
+                <div class="w-full mt-3">
+                    <div class="flex justify-between items-center text-[10px] font-bold opacity-90 mb-1">
+                        <span>HP</span>
+                        <span>${pokemon.hp_atual}/${pokemon.hp_max}</span>
+                    </div>
+                    <div class="w-full bg-black/25 h-2 rounded-full overflow-hidden border border-white/10">
+                        <div class="h-full ${healthColor} transition-all duration-300" style="width: ${hpPercent}%"></div>
+                    </div>
+                </div>
+
+                <!-- Atributos base -->
+                <div class="w-full grid grid-cols-2 gap-2 mt-3 text-[11px] font-bold">
+                    <div class="bg-black/20 rounded-lg p-1">
+                        <span class="block opacity-70 text-[8px] uppercase">Ataque</span>
+                        <span>⚔️ ${pokemon.attack}</span>
+                    </div>
+                    <div class="bg-black/20 rounded-lg p-1">
+                        <span class="block opacity-70 text-[8px] uppercase">Defesa</span>
+                        <span>🛡️ ${pokemon.defense}</span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // Traduz tipos de pokémon para PT-BR
+        function translateType(type) {
+            const translations = {
+                grass: 'Planta',
+                fire: 'Fogo',
+                water: 'Água',
+                electric: 'Elétrico',
+                normal: 'Normal',
+                poison: 'Veneno',
+                ground: 'Terra',
+                flying: 'Voador',
+                bug: 'Inseto',
+                fairy: 'Fada',
+                fighting: 'Lutador',
+                psychic: 'Psíquico',
+                rock: 'Pedra',
+                steel: 'Aço',
+                ice: 'Gelo',
+                ghost: 'Fantasma',
+                dragon: 'Dragão',
+                dark: 'Sombrio'
+            };
+            return translations[type] || type;
+        }
+    </script>
+</body>
+</html>
