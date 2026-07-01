@@ -141,7 +141,6 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <button id="btn-open-ranking" class="touch-target inline-flex items-center gap-2 rounded-full border border-pokeYellow px-4 py-3 text-sm font-bold uppercase tracking-[0.16em] bg-slate-950/80 hover:bg-slate-900 transition hidden">🏆 Ranking Geral</button>
                 <button id="btn-audio-settings" class="touch-target inline-flex items-center justify-center rounded-full border border-slate-500 w-12 h-12 bg-slate-950/80 text-xl hover:bg-slate-900 transition" aria-label="Áudio">🔊</button>
                 <button id="btn-logout" class="touch-target hidden inline-flex items-center gap-2 rounded-full border border-red-500 px-4 py-3 text-sm font-bold uppercase tracking-[0.16em] bg-red-950/80 hover:bg-red-900 transition">🚪 Sair</button>
             </div>
@@ -438,32 +437,6 @@
         </div>
     </div>
 
-    <div id="ranking-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 modal-backdrop">
-        <div class="w-full max-w-4xl rounded-3xl bg-slate-950/95 border border-pokeYellow p-6 shadow-2xl">
-            <div class="flex items-center justify-between gap-4 mb-4">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.25em] text-pokeYellow font-semibold">Ranking Geral</p>
-                    <h2 class="text-3xl font-extrabold text-white">Melhores Jogadores</h2>
-                </div>
-                <button id="btn-close-ranking" class="touch-target rounded-full bg-slate-800 px-4 py-3 text-sm font-bold uppercase border border-slate-700 hover:bg-slate-700">Fechar</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-xs uppercase tracking-[0.24em] text-slate-400 border-b border-slate-700">
-                            <th class="py-3 px-3">Posição</th>
-                            <th class="py-3 px-3">Jogador</th>
-                            <th class="py-3 px-3">Nível do Pokémon mais forte</th>
-                            <th class="py-3 px-3">Pokémons Capturados</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ranking-table-body"></tbody>
-                </table>
-            </div>
-            <div id="ranking-empty" class="mt-6 text-center text-slate-400 hidden">Nenhum jogador registrado ainda.</div>
-        </div>
-    </div>
-
     <div id="custom-toast" class="hidden fixed top-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-3xl border border-pokeYellow bg-slate-950/95 px-6 py-4 text-sm font-bold shadow-2xl">
         <span id="toast-icon">💡</span>
         <span id="toast-message">Aviso</span>
@@ -479,7 +452,6 @@
         const STORAGE_KEYS = {
             lastUser: 'pokemon_card_rpg_last_user',
             likes: 'pokemon_card_rpg_likes_local',
-            ranking: 'pokemon_card_rpg_ranking',
             account: 'pokemon_card_rpg_account_'
         };
 
@@ -506,13 +478,6 @@
             },
             saveLocalAccount(username, payload) {
                 localStorage.setItem(`${STORAGE_KEYS.account}${username.toLowerCase()}`, JSON.stringify(payload));
-            },
-            getLocalRanking() {
-                const raw = localStorage.getItem(STORAGE_KEYS.ranking);
-                return raw ? JSON.parse(raw) : [];
-            },
-            saveLocalRanking(payload) {
-                localStorage.setItem(STORAGE_KEYS.ranking, JSON.stringify(payload));
             },
             getLocalLikes() {
                 return parseInt(localStorage.getItem(STORAGE_KEYS.likes) || '0', 10) || 0;
@@ -563,7 +528,8 @@
         const LikeSystem = {
             currentLikes: 0,
             async init() {
-                this.currentLikes = StorageService.getLocalLikes() || 42;
+                const savedLikes = StorageService.getLocalLikes();
+                this.currentLikes = Number.isFinite(savedLikes) ? savedLikes : 42;
                 this.updateUI();
                 if (location.protocol === 'file:') {
                     console.warn('Modo local detectado. Pulando sincronização de likes por CORS.');
@@ -610,64 +576,6 @@
             updateUI() {
                 const countEl = document.getElementById('like-count');
                 if (countEl) countEl.innerText = String(this.currentLikes);
-            }
-        };
-
-        const RankingService = {
-            list: [],
-            async init() {
-                this.list = StorageService.getLocalRanking();
-                await this.refreshFromApi();
-                this.renderTable();
-            },
-            saveLocal() {
-                StorageService.saveLocalRanking(this.list);
-            },
-            async refreshFromApi() {
-                try {
-                    const ranking = await backendRequest('/ranking', 'GET');
-                    if (Array.isArray(ranking)) {
-                        this.list = ranking;
-                        this.saveLocal();
-                    }
-                } catch (error) {
-                    console.warn('Ranking backend indisponível, usando local.', error);
-                }
-            },
-            async updatePlayer(account) {
-                await this.refreshFromApi();
-                this.renderTable();
-            },
-            renderTable() {
-                const body = document.getElementById('ranking-table-body');
-                const empty = document.getElementById('ranking-empty');
-                if (!body || !empty) return;
-                body.innerHTML = '';
-                if (this.list.length === 0) {
-                    empty.classList.remove('hidden');
-                    return;
-                }
-                empty.classList.add('hidden');
-                this.list.slice(0, 12).forEach((entry, index) => {
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-slate-800';
-                    row.innerHTML = `
-                        <td class="py-3 px-3">#${index + 1}</td>
-                        <td class="py-3 px-3">${entry.username}</td>
-                        <td class="py-3 px-3">${entry.strongestLevel}</td>
-                        <td class="py-3 px-3">${entry.captured}</td>
-                    `;
-                    body.appendChild(row);
-                });
-            },
-            async openModal() {
-                const modal = document.getElementById('ranking-modal');
-                modal?.classList.remove('hidden');
-                await this.refreshFromApi();
-                this.renderTable();
-            },
-            closeModal() {
-                document.getElementById('ranking-modal')?.classList.add('hidden');
             }
         };
 
@@ -908,14 +816,18 @@
             document.getElementById('auth-tab-register').addEventListener('click', () => toggleAuthTab('register'));
             document.getElementById('btn-login').addEventListener('click', handleLogin);
             document.getElementById('btn-register').addEventListener('click', handleRegister);
-            document.getElementById('btn-open-ranking').addEventListener('click', () => RankingService.openModal());
+            document.getElementById('login-password').addEventListener('keydown', event => {
+                if (event.key === 'Enter') handleLogin();
+            });
+            document.getElementById('register-password-confirm').addEventListener('keydown', event => {
+                if (event.key === 'Enter') handleRegister();
+            });
             document.getElementById('btn-audio-settings').addEventListener('click', () => AudioSettings.open());
             document.getElementById('btn-close-audio-settings').addEventListener('click', () => AudioSettings.close());
             document.getElementById('audio-volume-slider').addEventListener('input', event => AudioSettings.updateVolume(parseFloat(event.target.value)));
             document.getElementById('audio-volume-down').addEventListener('click', () => AudioSettings.changeVolume(-0.1));
             document.getElementById('audio-volume-up').addEventListener('click', () => AudioSettings.changeVolume(0.1));
             document.getElementById('audio-mute-toggle').addEventListener('click', () => AudioSettings.toggleMute());
-            document.getElementById('btn-close-ranking').addEventListener('click', () => RankingService.closeModal());
             document.getElementById('btn-logout').addEventListener('click', logoutPlayer);
 
             document.getElementById('btn-confirm-starter').addEventListener('click', () => {
@@ -961,7 +873,8 @@
             init() {
                 const saved = localStorage.getItem('pokemon_card_rpg_volume');
                 if (saved !== null) {
-                    this.volume = parseFloat(saved);
+                    const parsed = parseFloat(saved);
+                    if (!Number.isNaN(parsed)) this.volume = Math.max(0, Math.min(1, parsed));
                 }
                 const muteSaved = localStorage.getItem('pokemon_card_rpg_muted');
                 if (muteSaved !== null) {
@@ -996,7 +909,6 @@
                     audio.play().catch(() => {
                         console.warn('Música aguardando interação adicional para reprodução.');
                     });
-                    document.body.removeEventListener('pointerdown', this.unlockOnInteraction);
                 };
                 document.body.addEventListener('pointerdown', tryPlay, { once: true });
             },
@@ -1005,6 +917,7 @@
                 localStorage.setItem('pokemon_card_rpg_muted', String(this.muted));
             },
             updateVolume(value) {
+                if (Number.isNaN(value)) return;
                 this.volume = Math.max(0, Math.min(1, value));
                 if (this.volume > 0) this.muted = false;
                 this.applyVolume();
@@ -1041,9 +954,12 @@
         }
 
         function clearAuthErrors() {
-            document.getElementById('auth-login-error').classList.add('hidden');
+            const loginError = document.getElementById('auth-login-error');
+            loginError.classList.add('hidden');
+            loginError.innerText = 'Usuário ou senha incorretos.';
             const registerError = document.getElementById('auth-register-error');
             registerError.classList.add('hidden');
+            registerError.innerText = '';
         }
 
         async function handleLogin() {
@@ -1156,7 +1072,10 @@
             GameState.currentAccount = null;
             GameState.team = [];
             GameState.activePokemonIndex = 0;
+            GameState.wildPokemon = null;
+            GameState.battle = { opponent: null, opponentTrainer: '', active: false, turn: 'player' };
             document.getElementById('btn-logout').classList.add('hidden');
+            document.getElementById('audio-settings-modal')?.classList.add('hidden');
             showScreen('screen-auth');
         }
 
@@ -1238,7 +1157,7 @@
             starterContainer.innerHTML = '';
             document.getElementById('starter-loader').classList.remove('hidden');
             try {
-                const promises = GameState.startersAvailable.map(p => fetch(`https://pokeapi.co/api/v2/pokemon/${p.name.toLowerCase()}`).then(res => res.json()));
+                const promises = GameState.startersAvailable.map(p => PokemonService.getPokemon(p.name.toLowerCase()));
                 const starterData = await Promise.all(promises);
                 document.getElementById('starter-loader').classList.add('hidden');
                 starterData.forEach(raw => renderStarterCard(parsePokemonData(raw, 5)));
@@ -1354,8 +1273,12 @@
             document.getElementById('explore-scanning').classList.remove('hidden');
             document.getElementById('explore-nothing').classList.add('hidden');
             document.getElementById('explore-encounter').classList.add('hidden');
+            document.getElementById('explore-actions').classList.remove('hidden');
             document.getElementById('capture-loader').classList.add('hidden');
-            document.getElementById('capture-result').classList.add('hidden');
+            const captureResult = document.getElementById('capture-result');
+            captureResult.classList.add('hidden');
+            captureResult.innerHTML = '';
+            GameState.wildPokemon = null;
             setTimeout(async () => {
                 const roll = Math.random();
                 if (roll < 0.5) {
@@ -1405,13 +1328,17 @@
         }
 
         function attemptCapture() {
+            if (!GameState.wildPokemon) {
+                showToast('Nenhum Pokémon disponível para captura.', '⚠️');
+                showScreen('screen-menu');
+                return;
+            }
             document.getElementById('explore-actions').classList.add('hidden');
             document.getElementById('capture-loader').classList.remove('hidden');
             setTimeout(async () => {
                 document.getElementById('capture-loader').classList.add('hidden');
                 const inside = document.getElementById('capture-result');
                 const roll = Math.random();
-                if (!GameState.wildPokemon) return;
                 if (roll < 0.65) {
                     AudioEngine.playPokeCatch();
                     GameState.team.push(GameState.wildPokemon);
@@ -1469,8 +1396,7 @@
             document.getElementById('battle-player-card').innerHTML = '<div class="rounded-3xl border border-slate-700 bg-slate-900/95 p-8 text-slate-400">Preparando...</div>';
             document.getElementById('battle-opponent-card').innerHTML = '<div class="rounded-3xl border border-slate-700 bg-slate-900/95 p-8 text-slate-400">Convocando oponente...</div>';
             try {
-                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${opponentId}`);
-                const raw = await response.json();
+                const raw = await PokemonService.getPokemon(opponentId);
                 GameState.battle.opponent = parsePokemonData(raw, opponentLevel);
                 GameState.battle.active = true;
                 GameState.battle.turn = 'player';
@@ -1517,7 +1443,10 @@
             disableBattleButtons(true);
             const player = GameState.team[GameState.activePokemonIndex];
             const opponent = GameState.battle.opponent;
-            if (!player || !opponent) return;
+            if (!player || !opponent) {
+                disableBattleButtons(false);
+                return;
+            }
             if (mode === 'strong' && Math.random() < 0.3) {
                 addBattleLog(`❌ ${player.name} errou o Ataque Forte!`);
                 GameState.battle.turn = 'opponent';
@@ -1578,10 +1507,15 @@
             if (player.xp >= player.xp_needed) {
                 player.xp -= player.xp_needed;
                 player.lvl += 1;
+                while (player.xp >= player.lvl * 25) {
+                    player.xp -= player.lvl * 25;
+                    player.lvl += 1;
+                }
                 player.xp_needed = player.lvl * 25;
-                player.hp_max += 2;
-                player.attack += 2;
-                player.defense += 2;
+                const levelsGained = Math.max(1, player.lvl - previousLevel);
+                player.hp_max += 2 * levelsGained;
+                player.attack += 2 * levelsGained;
+                player.defense += 2 * levelsGained;
                 player.hp_atual = player.hp_max;
                 levelUp = true;
                 AudioEngine.playLvlUp();
